@@ -1,243 +1,468 @@
-if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-
-var container, stats;
-var camera, scene, renderer, materials = [], parameters, i, h, color;
-var mouseX = 0, mouseY = 0;
-
-var windowHalfX = window.innerWidth / 2;
-var windowHalfY = window.innerHeight / 2;
-
-
-var sphere, uniforms, attributes;
-
-var particles;
-
-
-/**
- * Speed up data
- */
-// var newWindU = [];
-// var newWindV = [];
-// var i = 0, j = 0;
-// wind_u.forEach(function (arr, y) {
-//     if (y % 1 !== 0) return;
-//     newWindU[i] = [];
-//     newWindV[i] = [];
-//     j = 0;
-//     arr.forEach(function (arr, x) {
-//         if (x % 1 !== 0) return;
-//         newWindU[i][j] = wind_u[y][x];
-//         newWindV[i][j] = wind_v[y][x];
-//         j++;
-//     });
-//     i++;
-// });
-// wind_u = newWindU;
-// wind_v = newWindV;
-
-wind_u = data_wind10_u;
-wind_v = data_wind10_v;
-
-
-init();
-animate();
-
-
-function translateCoordX(x) {
-    return (x / wind_u[0].length) * window.innerWidth - window.innerWidth / 2;
-}
-function translateCoordY(y) {
-    return (y / wind_u.length) * window.innerHeight - window.innerHeight / 2;
-}
-
-
-/**
- * Init
- */
-
-function init() {
-
-    container = document.createElement( 'div' );
-    document.body.appendChild( container );
-
-    camera = new THREE.OrthographicCamera(
-        - window.innerWidth / 2,    // left
-        window.innerWidth / 2,      // right
-        - window.innerHeight / 2,   // top
-        window.innerHeight / 2,     // bottom
-        0,                          // near
-        1000                        // far
-    );
-
-    scene = new THREE.Scene();
+/*globals d3,topojson*/
+'use strict';
 
 
 
-    // var geometry = new THREE.Geometry();
+var now = Date.now(),
+    timeDiff,
+    lastTick = Date.now();
+
+var options = {
+    speedFactor: 0.04,
+    lifeTime: 1000,
+    lineWidth: 1,
+    colorAlpha: 0.6,
+    globalAlpha: 0.94,
+    color: [
+       '71,132,255',
+       '110,118,233',
+       '149,105,211',
+       '189,92,190',
+       '228,79,168',
+       '255,71,154'
+    ],
+    criterion: 'temp2m'
+};
 
 
-    // var lineMaterial = new THREE.LineBasicMaterial({
-    //     color: 0x0000ff
-    // });
+var t, s;
+var mouseBuffer = {x: 0, y: 0};
 
 
 
 
-    // wind_u.forEach(function (arr, y) {
-    //     arr.forEach(function (arr, x) {
+var width = document.querySelector('.container').clientWidth,
+    height = document.querySelector('.container').clientHeight;
 
-    //         var material = new THREE.LineBasicMaterial({
-    //             color: 0x0000ff
-    //         });
+var grid_center = {lat: 47.5, lon: 4};
 
-    //         var geometry = new THREE.Geometry();
-    //         geometry.vertices.push(new THREE.Vector3(
-    //             x * scaleX - windowHalfX,
-    //             y * scaleY - windowHalfY,
-    //             0
-    //         ));
-    //         geometry.vertices.push(new THREE.Vector3(
-    //             x * scaleX - windowHalfX + wind_u[y][x],
-    //             y * scaleY - windowHalfY + wind_v[y][x]
-    //         ), 0);
+var projection = d3.geo.conicConformal()
+                .center([47.5, 4])
+                .scale(width)
+                .rotate([-grid_center.lon, 0])
+                .parallels([47.5, 47.5])
+                .translate([width, height])
+                .precision(0.1);
 
-    //         scene.add(new THREE.Line(geometry, material));
-
-    //     });
-    // });
+// var projection = d3.geo.mercator()
+//     .scale(width)
+//     .center([47.5, 4])
+//     .rotate([-grid_center.lon, 0])
+//     .translate([width, height])
+//     .precision(.1);
 
 
 
-    // ========================================================
 
 
-    attributes = {
 
-        size: { type: 'f', value: [] },
-        customColor: { type: 'c', value: [] }
+// var projection = d3.geo.mercator();
 
+var path = d3.geo.path()
+.projection(projection);
+
+var zoom = d3.behavior.zoom()
+    .center([width/2, height/2])
+    .scaleExtent([0, 3])
+    .on("zoom", move);
+
+
+var graticule = d3.geo.graticule()
+    .extent([[-90,0], [90, 90]])
+    .step([5, 5]);
+
+var svg = d3.select("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .append("g")
+       .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+       .call(zoom);
+var g = svg.append('g');
+
+
+// var center = projection([grid_center.lon, grid_center.lat]),
+//     bottomLeft = projection([-24.6064, 26.3683]),
+//     topRight = projection([4 + (4 + 24.6064), (47.5 + (47.5 - 26.3683))]); // 48, 60
+
+
+var countries = g.append('g').attr('class', 'countries');
+
+var graticulePath = g.append("path")
+    .datum(graticule)
+    .attr("class", "graticule")
+    .attr("d", path);
+
+var cursor = g.append('circle')
+    .attr('cx', 0)
+    .attr('cy', 0)
+    .attr('r', 5)
+    .attr('class', 'cursor');
+
+
+
+
+var container = document.querySelector('.container'),
+    canvas = [],
+    ctx = [],
+    buffer = document.createElement('canvas'),
+    bufferCtx = buffer.getContext('2d'),
+    tempCanvas,
+    tempCtx;
+
+
+var dataLoaded = false;
+
+
+var projTopLeft, projBottomRight;
+var gridSize;
+var corners;
+
+d3.json('data/data.json', function(err, data) {
+
+    window.data = data;
+
+    gridSize = {
+        x: data.lat[0].length - 1,
+        y: data.lat.length - 1
     };
 
-    uniforms = {
-
-        amplitude: { type: "f", value: 1.0 },
-        color:     { type: "c", value: new THREE.Color( 0xffffff ) },
-        texture:   { type: "t", value: THREE.ImageUtils.loadTexture('spark.png') },
-
+    /** Data
+     *    ^
+     *  y |
+     *    0 —->
+     *      x
+     */
+    corners = {
+        topLeft: [data.lon[gridSize.y][0], data.lat[gridSize.y][0]],
+        topRight: [data.lon[gridSize.y][gridSize.x], data.lat[gridSize.y][gridSize.x]],
+        bottomLeft: [data.lon[0][0], data.lat[0][0]],
+        bottomRight: [data.lon[0][gridSize.x], data.lat[0][gridSize.x]],
     };
 
-    var shaderMaterial = new THREE.ShaderMaterial( {
-
-        uniforms:       uniforms,
-        attributes:     attributes,
-        vertexShader:   document.getElementById( 'vertexshader' ).textContent,
-        fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
-
-        blending:       THREE.AdditiveBlending,
-        depthTest:      false,
-        transparent:    true
-
-    });
+    projTopLeft = projection(corners.topLeft);
+    projBottomRight = projection(corners.bottomRight);
 
 
-    particles = new THREE.Geometry();
+    /**
+     * Draw control dataframe
+     */
+    g.append('polyline')
+        .attr('class', 'dataframe')
+        .attr('points', [
+               projection(corners.topLeft),
+               projection(corners.topRight),
+               projection(corners.bottomRight),
+               projection(corners.bottomLeft),
+               projection(corners.topLeft)
+           ].map(function (item) { return item.toString(); }).join(' '));
 
-    var index = 0;
 
-    wind_u.forEach(function (arr, y) {
-        arr.forEach(function (arr, x) {
+    dataLoaded = true;
 
-            var particle = new THREE.Vector3();
-            particle.x = translateCoordX(x);
-            particle.y = translateCoordY(y);
-            particle.z = 0;
-            particle.originalPosition = new THREE.Vector3(translateCoordX(x), translateCoordY(y), 0);
-            particle.velocity = new THREE.Vector3(wind_u[y][x], wind_v[y][x], 0);
-            particle.timeOffset = Math.random();
+    move();
+    setupCanvas();
 
-            particles.vertices[index] = particle;
-            // attributes.size.value[index] = 10;
-            attributes.size.value[index] = Math.abs(wind_u[y][x]) + Math.abs(wind_v[y][x]);
-            attributes.customColor.value[index] = new THREE.Color(0x0E578D);
+});
 
-            index++;
 
-        });
-    });
-
-    sphere = new THREE.ParticleSystem( particles, shaderMaterial );
-    sphere.dynamic = true;
-    scene.add( sphere );
+var canvasDim, canvasOffset;
+move();
 
 
 
-    // ========================================================
+d3.json("js/world-50m.json", function(error, world) {
+
+    countries.selectAll('path')
+       .data(topojson.feature(world, world.objects.countries).features)
+       .enter().append('path')
+            // .attr('class', 'country')
+            .attr('class', function(d,i) { return 'country countr-' + d.id; })
+            .attr('d', path);
+
+});
 
 
 
 
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    container.appendChild( renderer.domElement );
 
-    stats = new Stats();
-    container.appendChild( stats.domElement );
+function move() {
 
-
-    window.addEventListener( 'resize', onWindowResize, false );
-
-}
-
-function onWindowResize() {
-
-    windowHalfX = window.innerWidth / 2;
-    windowHalfY = window.innerHeight / 2;
-
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize( window.innerWidth, window.innerHeight );
-
-}
-
-
-/**
- * Animate
- */
-
-
-function animate() {
-
-    var time = Date.now() / 1000;
-
-    requestAnimationFrame( animate );
-
-    var particle;
-
-    for (var i = 0; i < particles.vertices.length; i++) {
-
-        particle = particles.vertices[i];
-
-        particle.add(particle.velocity);
-        particle.x = particle.originalPosition.x + (particle.velocity.x * (time + particle.timeOffset)) % particle.velocity.x;
-        particle.y = particle.originalPosition.y + (particle.velocity.y * (time + particle.timeOffset)) % particle.velocity.y;
-
+    if (d3.event) {
+       t = d3.event.translate;
+       s = d3.event.scale;
+    } else {
+       t = [0,0];
+       s = 1;
     }
 
 
-    sphere.geometry.verticesNeedUpdate = true;
-
-
-    // for( var i = 0; i < attributes.size.value.length; i++ ) {
-    //     sphere.geometry.vertices[i].x += 1;
-    //     // attributes.size.value[ i ] = 14 + 13 * Math.sin( 1 * i + time );
+    // var originalT = [t[0], t[1]];
+    // mouseBuffer.x = originalT[0] - t[0];
+    // mouseBuffer.y = originalT[1] - t[1];
+    // t[0] = clamp(t[0] - mouseBuffer.x, (width - canvasDim.width) / 2, -(width - canvasDim.width) / 2);
+    // t[1] = clamp(t[1] - mouseBuffer.y, (height - canvasDim.height) / 2, -(height - canvasDim.height) / 2);
+    // if (width > canvasDim.width) {
+    //     t[0] = 0;
+    // }
+    // if (height > canvasDim.height) {
+    //     t[1] = 1;
     // }
 
-    // attributes.size.needsUpdate = true;
 
+    g.style("stroke-width", 1 / s).attr("transform", "translate(" + [t[0],t[1]] + ")scale(" + s + ")");
 
+    graticulePath.style('stroke-width', 1/s);
 
-    renderer.render( scene, camera );
-    stats.update();
+    for (var i = 0; i < ctx.length; i++) {
+        ctx[i].clearRect(0,0,canvas[i].width, canvas[i].height);
+    }
+
+    if (dataLoaded) {
+
+        canvasDim = {
+           width: (projBottomRight[0] - projTopLeft[0]) * s,
+           height: -(projTopLeft[1] - projBottomRight[1]) * s
+        };
+        canvasOffset = {
+           x: width / 2 + projTopLeft[0] * s + t[0],
+           y: height / 2 + projTopLeft[1] * s + t[1]
+        };
+
+    }
 
 }
+
+
+
+function resizeCanvas() {
+    var windowAspectRatio = window.innerWidth / window.innerHeight,
+       containerAspectRatio = container.clientWidth / container.clientHeight;
+
+    if (windowAspectRatio > containerAspectRatio) {
+        container.style.width = (window.innerHeight * containerAspectRatio) + 'px';
+        container.style.height = window.innerHeight + 'px';
+    } else {
+        container.style.width = window.innerWidth + 'px';
+        container.style.height = (window.innerWidth / containerAspectRatio) + 'px';
+    }
+
+    // TODO..........
+    container.style.width = width + 'px';
+    container.style.height = height + 'px';
+
+
+    for (var i = 0; i < canvas.length; i++) {
+        canvas[i].width = document.querySelector('.container').clientWidth;
+        canvas[i].height = document.querySelector('.container').clientHeight;
+        // ctx[i].setTransform(canvasMapWidth / canvas[i].width, 0, (canvas[i].width - canvasMapWidth) / 2,
+        // canvasMapHeight / canvas[i].height, 0, (canvas[i].height - canvasMapHeight) / 2);
+    }
+
+    buffer.width = document.querySelector('.container').clientWidth;
+    buffer.height = document.querySelector('.container').clientHeight;
+    tempCanvas.width = document.querySelector('.container').clientWidth;
+    tempCanvas.height = document.querySelector('.container').clientHeight;
+    svg.attr("width", buffer.width);
+    svg.attr("height", buffer.height);
+    width = buffer.width;
+    height = buffer.height;
+
+}
+window.addEventListener('resize', resizeCanvas);
+
+
+
+function clamp(val, min, max) {
+    return Math.min(Math.max(val, min), max);
+}
+
+
+function getDataCoords(x, y) {
+    return [
+        Math.floor(clamp((x - canvasOffset.x) / canvasDim.width, 0, 1) * gridSize.x),
+        gridSize.y - Math.floor(clamp((y - canvasOffset.y) / canvasDim.height, 0, 1) * gridSize.y),
+    ];
+}
+
+
+
+
+function Particle(x, y) {
+    this.reset(Math.floor(now + Math.random() * options.lifeTime));
+}
+Particle.prototype.reset = function (lifeTime) {
+    this.x = canvasOffset.x + Math.floor(Math.random() * canvasDim.width);
+    this.y = canvasOffset.y + Math.floor(Math.random() * canvasDim.height);
+    this.refreshCoords();
+    this.lifeTime = lifeTime || now + options.lifeTime;
+};
+Particle.prototype.refreshCoords = function () {
+    var coords = getDataCoords(this.x, this.y);
+    this.dataCoordX = coords[0];
+    this.dataCoordY = coords[1];
+};
+Particle.prototype.tick = function () {
+    if (this.x > canvasOffset.x + canvasDim.width || this.x < canvasOffset.x ||
+        this.y > canvasOffset.y + canvasDim.height || this.y < canvasOffset.y ||
+        this.lifeTime < now) {
+        this.reset();
+    }
+};
+Particle.prototype.nextPositionX = function () {
+    this.x = this.x + data.wind10m_u[this.dataCoordY][this.dataCoordX] * timeDiff * options.speedFactor;
+    return this.x;
+};
+Particle.prototype.nextPositionY = function () {
+    this.y = this.y - data.wind10m_v[this.dataCoordY][this.dataCoordX] * timeDiff * options.speedFactor;
+    return this.y;
+};
+
+
+
+var particles = [],
+    bounds = [];
+function setupCanvas() {
+
+    // Temperature canvas
+    tempCanvas = document.createElement('canvas');
+    document.querySelector('.container').appendChild(tempCanvas);
+    tempCtx = tempCanvas.getContext('2d');
+
+
+    // Create canvas layers
+    for (var i = 0; i < options.color.length; i++) {
+        canvas[i] = document.createElement('canvas');
+        document.querySelector('.container').appendChild(canvas[i]);
+        ctx[i] = canvas[i].getContext('2d');
+    }
+
+    // Resize canvas
+    resizeCanvas();
+
+
+    // Set which paramter will be colored
+    setupBounds();
+
+
+    // Create particles
+    for (var i = 0; i < 10000; i++) {
+        particles[i] = new Particle();
+    }
+
+    // Start rendering
+    render();
+
+
+    // Mouse event
+    var container = document.querySelector('.container'),
+        header = document.querySelector('.header');
+
+    container.addEventListener('mousemove', function(e) {
+        var coords = getDataCoords(e.x, e.y - header.clientHeight);
+        var proj = projection([data.lon[coords[1]][coords[0]], data.lat[coords[1]][coords[0]]]);
+        cursor.attr('transform', 'translate(' + proj + ')');
+        for (var key in data) {
+            if (data.hasOwnProperty(key)) {
+                if (document.querySelector('.data_' + key)) {
+                    document.querySelector('.data_' + key).innerHTML = data[key][coords[1]][coords[0]];
+                }
+            }
+        }
+    });
+
+}
+
+
+function setupBounds(criterion) {
+
+    if (criterion) {
+        options.criterion = criterion;
+    }
+
+    // Find min/max
+    var min = Math.min.apply(null, data[options.criterion].map(function(item) {
+        return Math.min.apply(null, item);
+    })) - 0.1;
+    var max = Math.max.apply(null, data[options.criterion].map(function(item) {
+        return Math.max.apply(null, item);
+    }));
+
+    // Find temp bounds
+    var step = (max - min) / options.color.length;
+    bounds = [];
+    for (var i = 0; i < options.color.length; i++) {
+        bounds.push({
+           low: min + step * i,
+           high: min + step * (i + 1)
+        });
+    }
+
+}
+
+
+
+var fpsCounter = function() {
+    var fps = 0;
+    return function (newFps) {
+        fps = (fps * 4 + newFps) / 5;
+        return Math.floor(fps * 10) / 10;
+    };
+}();
+
+
+function render() {
+
+    now = Date.now();
+    timeDiff = (Date.now() - lastTick) / 16; // timeDiff should be near 1 at 60fps
+    lastTick = now;
+
+    requestAnimationFrame(render);
+
+    bufferCtx.globalAlpha = options.globalAlpha;
+
+    for (var j = 0; j < particles.length; j++) {
+       particles[j].refreshCoords();
+       particles[j].tick();
+    }
+
+    for (var i = 0; i < canvas.length; i++) {
+
+       bufferCtx.clearRect(0, 0, buffer.width, buffer.height);
+       bufferCtx.drawImage(canvas[i], 0, 0);
+       ctx[i].clearRect(0, 0, canvas[i].width, canvas[i].height);
+       ctx[i].drawImage(buffer, 0, 0);
+
+       ctx[i].beginPath();
+
+           ctx[i].lineWidth = options.lineWidth;
+           ctx[i].strokeStyle = 'rgba(' + options.color[i] + ',' + options.colorAlpha + ')';
+
+           for (var j = 0; j < particles.length; j++) {
+               var criterion = data[options.criterion][particles[j].dataCoordY][particles[j].dataCoordX];
+               if (bounds[i].low < criterion && criterion <= bounds[i].high) {
+                   ctx[i].moveTo(particles[j].x, particles[j].y);
+                   ctx[i].lineTo(particles[j].nextPositionX(), particles[j].nextPositionY());
+               }
+           }
+
+       ctx[i].stroke();
+
+    }
+
+    /**
+     * FPS counter
+     */
+    ctx[0].clearRect(0, 0, 50, height);
+    ctx[0].fillStyle = '#ffffff';
+    ctx[0].fillText(fpsCounter(1000 / (timeDiff * 16)), 0, height);
+
+}
+
+
+NodeList.prototype.forEach = Array.prototype.forEach;
+document.querySelectorAll('.menu a').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+        e.preventDefault();
+        setupBounds(el.dataset.criterion);
+    });
+});
