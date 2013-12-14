@@ -330,10 +330,20 @@ function setupCanvas() {
         for (var key in data) {
             if (data.hasOwnProperty(key)) {
                 if (document.querySelector('.data_' + key)) {
-                    document.querySelector('.data_' + key).innerHTML = Math.round(data[key][coords[1]*data.nx+coords[0]]*100)/100;
+                    if (key == 'lat' || key == 'lon') {
+                      document.querySelector('.data_' + key).innerHTML = Math.round(data[key][coords[1]*data.nx+coords[0]]*100)/100;
+                    } else {
+                      document.querySelector('.data_' + key).innerHTML = Math.round(data[key][coords[1]*data.nx+coords[0]]*10)/10;
+                    }
                 }
             }
         }
+        var u=data['wind10m_u'][coords[1]*data.nx+coords[0]];
+        var v=data['wind10m_v'][coords[1]*data.nx+coords[0]];
+	var speed=Math.round(Math.sqrt(u*u+v*v)*36)/10;
+	var dir=Math.round(((360-Math.atan2(v,u)/Math.PI*180-90)%360)*10)/10;
+        document.querySelector('.data_wind10m_speed').innerHTML = speed;
+        document.querySelector('.data_wind10m_dir').innerHTML = dir;
     });
 
 }
