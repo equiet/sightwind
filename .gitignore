@@ -1,1 +1,6 @@
 data/eu*
+*~
+data/data-*
+data/data.nc
+data/last.js
+*.kate-swp

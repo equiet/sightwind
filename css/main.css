@@ -135,12 +135,11 @@ a {
 	left: 15px;
 	bottom: 15px;
 	width: 280px;
-	height: 25px;
-	line-height: 24px;
 	background: #fff;
+	line-height:16px;
 	color: #666;
 	font-size: 11px;
-	padding: 0 10px;
+	padding: 8px 10px;
 	box-sizing: border-box;
 }
 
@@ -208,4 +207,17 @@ svg {
 
 .cursor {
 	/*fill: #fff;*/
+}
+
+.loading {
+  z-index: 10;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: white;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding-top: 50px;
+  text-align: center;
 }
