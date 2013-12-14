@@ -170,7 +170,7 @@ move();
 
 
 
-d3.json("js/world-50m.json", function(error, world) {
+d3.json('data/world-50m.json', function(error, world) {
 
     countries.selectAll('path')
        .data(topojson.feature(world, world.objects.countries).features)
