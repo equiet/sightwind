@@ -8,6 +8,10 @@ So meteo.
     Wow.
 </pre>
 
+## Demo
+
+http://sightwind.com
+
 ## Update data
 
 1. Download data from http://dap.ometfn.net/ into `data/`.
