@@ -112,61 +112,27 @@ var container = document.querySelector('.container'),
 
 var dataLoaded = false;
 
+var data = {
+  nx: 495,
+  ny: 309,
+  lat: false,
+  lon: false,
+  wind10m_u: false,
+  wind10m_v: false,
+  temp2m: false,
+  press: false,
+  rain: false,
+  topo: false
+};
+
 
 var projTopLeft, projBottomRight;
 var gridSize;
 var corners;
 
-d3.json('data/data.json', function(err, data) {
-
-    window.data = data;
-
-    gridSize = {
-        x: data.lat[0].length - 1,
-        y: data.lat.length - 1
-    };
-
-    /** Data
-     *    ^
-     *  y |
-     *    0 —->
-     *      x
-     */
-    corners = {
-        topLeft: [data.lon[gridSize.y][0], data.lat[gridSize.y][0]],
-        topRight: [data.lon[gridSize.y][gridSize.x], data.lat[gridSize.y][gridSize.x]],
-        bottomLeft: [data.lon[0][0], data.lat[0][0]],
-        bottomRight: [data.lon[0][gridSize.x], data.lat[0][gridSize.x]],
-    };
-
-    projTopLeft = projection(corners.topLeft);
-    projBottomRight = projection(corners.bottomRight);
-
-
-    /**
-     * Draw control dataframe
-     */
-    g.append('polyline')
-        .attr('class', 'dataframe')
-        .attr('points', [
-               projection(corners.topLeft),
-               projection(corners.topRight),
-               projection(corners.bottomRight),
-               projection(corners.bottomLeft),
-               projection(corners.topLeft)
-           ].map(function (item) { return item.toString(); }).join(' '));
-
-
-    dataLoaded = true;
-
-    move();
-    setupCanvas();
-
-});
-
 
 var canvasDim, canvasOffset;
-move();
+//move();
 
 
 
@@ -279,8 +245,8 @@ function clamp(val, min, max) {
 
 function getDataCoords(x, y) {
     return [
-        Math.floor(clamp((x - canvasOffset.x) / canvasDim.width, 0, 1) * gridSize.x),
-        gridSize.y - Math.floor(clamp((y - canvasOffset.y) / canvasDim.height, 0, 1) * gridSize.y),
+        Math.floor(clamp((x - canvasOffset.x) / canvasDim.width, 0, 1) * data.nx),
+        data.ny - Math.floor(clamp((y - canvasOffset.y) / canvasDim.height, 0, 1) * data.ny) -1,
     ];
 }
 
@@ -309,11 +275,11 @@ Particle.prototype.tick = function () {
     }
 };
 Particle.prototype.nextPositionX = function () {
-    this.x = this.x + data.wind10m_u[this.dataCoordY][this.dataCoordX] * timeDiff * options.speedFactor;
+    this.x = this.x + data.wind10m_u[this.dataCoordY*data.nx+this.dataCoordX] * timeDiff * options.speedFactor;
     return this.x;
 };
 Particle.prototype.nextPositionY = function () {
-    this.y = this.y - data.wind10m_v[this.dataCoordY][this.dataCoordX] * timeDiff * options.speedFactor;
+    this.y = this.y - data.wind10m_v[this.dataCoordY*data.nx+this.dataCoordX] * timeDiff * options.speedFactor;
     return this.y;
 };
 
@@ -359,12 +325,12 @@ function setupCanvas() {
 
     container.addEventListener('mousemove', function(e) {
         var coords = getDataCoords(e.x, e.y - header.clientHeight);
-        var proj = projection([data.lon[coords[1]][coords[0]], data.lat[coords[1]][coords[0]]]);
+        var proj = projection([data.lon[coords[1]*data.nx+coords[0]], data.lat[coords[1]*data.nx+coords[0]]]);
         cursor.attr('transform', 'translate(' + proj + ')');
         for (var key in data) {
             if (data.hasOwnProperty(key)) {
                 if (document.querySelector('.data_' + key)) {
-                    document.querySelector('.data_' + key).innerHTML = data[key][coords[1]][coords[0]];
+                    document.querySelector('.data_' + key).innerHTML = Math.round(data[key][coords[1]*data.nx+coords[0]]*100)/100;
                 }
             }
         }
@@ -380,13 +346,25 @@ function setupBounds(criterion) {
     }
 
     // Find min/max
-    var min = Math.min.apply(null, data[options.criterion].map(function(item) {
+    /*var min = Math.min.apply(null, data[options.criterion].map(function(item) {
         return Math.min.apply(null, item);
     })) - 0.1;
     var max = Math.max.apply(null, data[options.criterion].map(function(item) {
         return Math.max.apply(null, item);
-    }));
-
+    }));*/
+    
+    var min = 99999;
+    var max = -99999;
+    var nvals = data.nx*data.ny;
+    for (i=0; i<nvals; i++) {
+      var val=data[options.criterion][i];
+      if (val < min) {
+	min=val;
+      } else if (val > max){
+	max=val;
+      }
+    }
+    
     // Find temp bounds
     var step = (max - min) / options.color.length;
     bounds = [];
@@ -438,7 +416,7 @@ function render() {
            ctx[i].strokeStyle = 'rgba(' + options.color[i] + ',' + options.colorAlpha + ')';
 
            for (var j = 0; j < particles.length; j++) {
-               var criterion = data[options.criterion][particles[j].dataCoordY][particles[j].dataCoordX];
+               var criterion = data[options.criterion][particles[j].dataCoordY*data.nx+particles[j].dataCoordX];
                if (bounds[i].low < criterion && criterion <= bounds[i].high) {
                    ctx[i].moveTo(particles[j].x, particles[j].y);
                    ctx[i].lineTo(particles[j].nextPositionX(), particles[j].nextPositionY());
@@ -466,3 +444,110 @@ document.querySelectorAll('.menu a').forEach(function(el) {
         setupBounds(el.dataset.criterion);
     });
 });
+
+
+var loadingText = document.getElementById("loading-text");
+var loadingPopup = document.getElementById("loading-popup");
+
+init();
+
+function init () {
+  var elem = document.createElement('canvas');
+  if (!(elem.getContext && elem.getContext('2d'))) {
+    init_error('Canvas');
+    return;
+  }
+  if (typeof Float32Array == "undefined") {
+    init_error('Typed Arrays');
+    return;
+  }
+  load_data_from_img('lat');
+}
+
+function init_error (msg) {
+  loadingPopup.innerHTML="<h2>Error</h2>";
+  loadingPopup.innerHTML+="<p>Your browser does not support "+msg+" technology.</p>";
+  loadingPopup.innerHTML+="<p>Please try with a modern browser such as Mozilla Firefox or Google Chrome.</p>";
+}
+
+function load_data_from_img (varname) {
+  loadingText.innerHTML+=varname + '...';
+  var img = new Image();
+  img.onload=function () {
+    var canvas = document.createElement("canvas");
+    canvas.width=data.nx;
+    canvas.height=data.ny;
+    var ctx=canvas.getContext("2d");
+    ctx.drawImage(img,0,0);
+    var imageData=ctx.getImageData(0,0, data.nx, data.ny);
+    data[varname] = new Float32Array(imageData.data.buffer);
+    imageData=null;
+    canvas=null;
+    img=null;
+    //TODO : implement bytes to float32 without typed arrays
+    loadingText.innerHTML+='ok<br>';
+    for (var key in data) {
+      if (data[key] === false) {
+	load_data_from_img (key);
+	return;
+      }
+    }
+    data_is_ready();
+  };
+  img.src="data/data-"+varname+".png";
+}
+
+function data_is_ready() {
+  loadingPopup.style.display='none';
+
+  /** Data
+    *    ^ 
+    *  y |
+    *    0 —->
+    *      x
+    */
+  corners = {
+      topLeft: [data.lon[data.nx*(data.ny-1)], data.lat[data.nx*(data.ny-1)]],
+      topRight: [data.lon[data.ny*data.nx-1], data.lat[data.ny*data.nx-1]],
+      bottomLeft: [data.lon[0], data.lat[0]],
+      bottomRight: [data.lon[(data.nx-1)], data.lat[(data.nx-1)]],
+  };
+
+  
+  projTopLeft = projection(corners.topLeft);
+  projBottomRight = projection(corners.bottomRight);
+
+
+  /**
+    * Draw control dataframe
+    */
+  g.append('polyline')
+      .attr('class', 'dataframe')
+      .attr('points', [
+	      projection(corners.topLeft),
+	      projection(corners.topRight),
+	      projection(corners.bottomRight),
+	      projection(corners.bottomLeft),
+	      projection(corners.topLeft)
+	  ].map(function (item) { return item.toString(); }).join(' '));
+
+
+  dataLoaded = true;
+
+  move();
+  setupCanvas();
+}
+
+function update_time(frame_time) {
+  var timeText = document.getElementById("time-text");
+  var d = new Date(0);
+  d.setUTCMilliseconds(frame_time*1000);
+  timeText.innerHTML=d.toLocaleString();
+  var tz=-1*d.getTimezoneOffset()/60;
+  if (tz > 0) {
+    timeText.innerHTML+=" UTC+"+tz;
+  } else {
+    tz *= -1;
+    timeText.innerHTML+=" UTC-"+tz;
+  }
+}
