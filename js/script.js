@@ -21,9 +21,14 @@ var options = {
        '228,79,168',
        '255,71,154'
     ],
-    criterion: 'temp2m'
+    criterion: 'temp2m',
+    nparticles: 1500
 };
 
+
+if (!!window.chrome) {
+    options.nparticles = 8000;
+}
 
 var t, s;
 var mouseBuffer = {x: 0, y: 0};
@@ -311,7 +316,7 @@ function setupCanvas() {
 
 
     // Create particles
-    for (var i = 0; i < 10000; i++) {
+    for (var i = 0; i < options.nparticles; i++) {
         particles[i] = new Particle();
     }
 
