@@ -562,7 +562,7 @@ function update_time(frame_time) {
   var timeText = document.getElementById("time-text");
   var d = new Date(0);
   d.setUTCMilliseconds(frame_time*1000);
-  timeText.innerHTML=d.toLocaleString();
+  timeText.innerHTML=d.toLocaleDateString()+" "+d.toLocaleTimeString();
   var tz=-1*d.getTimezoneOffset()/60;
   if (tz > 0) {
     timeText.innerHTML+=" UTC+"+tz;
