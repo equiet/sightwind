@@ -330,7 +330,7 @@ function setupCanvas() {
         header = document.querySelector('.header');
 
     container.addEventListener('mousemove', function(e) {
-        var coords = getDataCoords(e.x, e.y - header.clientHeight);
+        var coords = getDataCoords(e.pageX, e.pageY - header.clientHeight);
         var proj = projection([data.lon[coords[1]*data.nx+coords[0]], data.lat[coords[1]*data.nx+coords[0]]]);
         cursor.attr('transform', 'translate(' + proj + ')');
         for (var key in data) {
