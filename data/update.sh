@@ -18,6 +18,8 @@ fi
 
 TIME_FRAME=$(( TIME_RUN + FRAME*3600 ))
 
+cd "$( dirname "${BASH_SOURCE[0]}" )
+
 VARS="wind10m_u,wind10m_v,topo,rain,temp2m,press[0],lat,lon"
 wget "http://dap.ometfn.net/eu12-pp_${RUN}_${FRAME}.nc.nc?$VARS" -O data.nc \
 && python nc-to-img.py \
