@@ -109,8 +109,8 @@ var cursor = g.append('circle')
 var container = document.querySelector('.container'),
     canvas = [],
     ctx = [],
-    buffer = document.createElement('canvas'),
-    bufferCtx = buffer.getContext('2d'),
+    buffer,
+    bufferCtx,
     tempCanvas,
     tempCtx;
 
@@ -294,6 +294,7 @@ var particles = [],
     bounds = [];
 function setupCanvas() {
 
+  
     // Temperature canvas
     tempCanvas = document.createElement('canvas');
     document.querySelector('.container').appendChild(tempCanvas);
@@ -329,7 +330,7 @@ function setupCanvas() {
         header = document.querySelector('.header');
 
     container.addEventListener('mousemove', function(e) {
-        var coords = getDataCoords(e.x, e.y - header.clientHeight);
+        var coords = getDataCoords(e.pageX, e.pageY - header.clientHeight);
         var proj = projection([data.lon[coords[1]*data.nx+coords[0]], data.lat[coords[1]*data.nx+coords[0]]]);
         cursor.attr('transform', 'translate(' + proj + ')');
         for (var key in data) {
@@ -476,6 +477,10 @@ function init () {
     init_error('Typed Arrays');
     return;
   }
+  
+  buffer = document.createElement('canvas');
+  bufferCtx = buffer.getContext('2d');
+  
   load_data_from_img('lat');
 }
 
@@ -557,7 +562,11 @@ function update_time(frame_time) {
   var timeText = document.getElementById("time-text");
   var d = new Date(0);
   d.setUTCMilliseconds(frame_time*1000);
-  timeText.innerHTML=d.toLocaleString();
+  var hour=d.getHours();
+  var minutes=d.getMinutes();
+  if (hour < 10) hour = "0"+hour;
+  if (minutes < 10) minutes = "0"+minutes;
+  timeText.innerHTML=d.toLocaleDateString()+", "+hour+":"+minutes;
   var tz=-1*d.getTimezoneOffset()/60;
   if (tz > 0) {
     timeText.innerHTML+=" UTC+"+tz;
