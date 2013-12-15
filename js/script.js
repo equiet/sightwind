@@ -109,8 +109,8 @@ var cursor = g.append('circle')
 var container = document.querySelector('.container'),
     canvas = [],
     ctx = [],
-    buffer = document.createElement('canvas'),
-    bufferCtx = buffer.getContext('2d'),
+    buffer,
+    bufferCtx,
     tempCanvas,
     tempCtx;
 
@@ -294,6 +294,7 @@ var particles = [],
     bounds = [];
 function setupCanvas() {
 
+  
     // Temperature canvas
     tempCanvas = document.createElement('canvas');
     document.querySelector('.container').appendChild(tempCanvas);
@@ -476,6 +477,10 @@ function init () {
     init_error('Typed Arrays');
     return;
   }
+  
+  buffer = document.createElement('canvas');
+  bufferCtx = buffer.getContext('2d');
+  
   load_data_from_img('lat');
 }
 
