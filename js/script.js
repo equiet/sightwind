@@ -22,12 +22,15 @@ var options = {
        '255,71,154'
     ],
     criterion: 'temp2m',
-    nparticles: 1500
+    startParticles: 1500,
+    minParticles: 1500,
+    maxParticles: 15000,
+    minFPS: 20
 };
 
 
 if (!!window.chrome) {
-    options.nparticles = 8000;
+    options.startParticles = 8000;
 }
 
 var t, s;
@@ -317,7 +320,7 @@ function setupCanvas() {
 
 
     // Create particles
-    for (var i = 0; i < options.nparticles; i++) {
+    for (var i = 0; i < options.startParticles; i++) {
         particles[i] = new Particle();
     }
 
@@ -409,7 +412,7 @@ function render() {
     now = Date.now();
     timeDiff = (Date.now() - lastTick) / 16; // timeDiff should be near 1 at 60fps
     lastTick = now;
-
+    
     requestAnimationFrame(render);
 
     bufferCtx.globalAlpha = options.globalAlpha;
@@ -446,10 +449,23 @@ function render() {
     /**
      * FPS counter
      */
-    ctx[0].clearRect(0, 0, 50, height);
+    var fps=fpsCounter(1000 / (timeDiff * 16));
+    
+    ctx[0].clearRect(0, 0, 100, height);
     ctx[0].fillStyle = '#ffffff';
-    ctx[0].fillText(fpsCounter(1000 / (timeDiff * 16)), 0, height);
-
+    ctx[0].fillText(fps, 0, height);
+    ctx[0].fillText(particles.length, 30, height);
+    
+    if (fps > options.minFPS && particles.length < options.maxParticles) {
+      for (var i = 0; i < 100; i++) {
+        particles.push(new Particle());
+      }
+    }
+    if (fps <  options.minFPS && particles.length > options.minParticles) {
+      for (var i = 0; i < 100; i++) {
+        particles.pop();
+      }
+    }
 }
 
 
@@ -462,21 +478,11 @@ document.querySelectorAll('.menu a').forEach(function(el) {
 });
 
 
-var loadingText = document.getElementById("loading-text");
-var loadingPopup = document.getElementById("loading-popup");
+
 
 init();
 
 function init () {
-  var elem = document.createElement('canvas');
-  if (!(elem.getContext && elem.getContext('2d'))) {
-    init_error('Canvas');
-    return;
-  }
-  if (typeof Float32Array == "undefined") {
-    init_error('Typed Arrays');
-    return;
-  }
   
   buffer = document.createElement('canvas');
   bufferCtx = buffer.getContext('2d');
@@ -484,14 +490,8 @@ function init () {
   load_data_from_img('lat');
 }
 
-function init_error (msg) {
-  loadingPopup.innerHTML="<h2>Error</h2>";
-  loadingPopup.innerHTML+="<p>Your browser does not support "+msg+" technology.</p>";
-  loadingPopup.innerHTML+="<p>Please try with a modern browser such as Mozilla Firefox or Google Chrome.</p>";
-}
-
 function load_data_from_img (varname) {
-  loadingText.innerHTML+=varname + '...';
+  loadingText.innerHTML+= varname + '<br>';
   var img = new Image();
   img.onload=function () {
     var canvas = document.createElement("canvas");
@@ -505,7 +505,6 @@ function load_data_from_img (varname) {
     canvas=null;
     img=null;
     //TODO : implement bytes to float32 without typed arrays
-    loadingText.innerHTML+='ok<br>';
     for (var key in data) {
       if (data[key] === false) {
 	load_data_from_img (key);
