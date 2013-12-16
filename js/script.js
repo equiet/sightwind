@@ -491,7 +491,7 @@ function init () {
 }
 
 function load_data_from_img (varname) {
-  loadingText.innerHTML+='data: '+varname + '...';
+  loadingText.innerHTML+= varname + '<br>';
   var img = new Image();
   img.onload=function () {
     var canvas = document.createElement("canvas");
@@ -505,7 +505,6 @@ function load_data_from_img (varname) {
     canvas=null;
     img=null;
     //TODO : implement bytes to float32 without typed arrays
-    loadingText.innerHTML+='ok<br>';
     for (var key in data) {
       if (data[key] === false) {
 	load_data_from_img (key);

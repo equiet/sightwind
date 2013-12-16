@@ -89,10 +89,9 @@
       
       function load_script() {
 	var scriptname=scripts_to_load.shift();
-	loadingText.innerHTML+='script: '+scriptname + '...';
+	loadingText.innerHTML+=scriptname + '<br>';
 	var script = document.createElement('script');
 	script.onload=function () {
-	  loadingText.innerHTML+='ok<br>';
 	  if (scripts_to_load.length > 0) {
 	    load_script ();
 	    return;
