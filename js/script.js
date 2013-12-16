@@ -22,12 +22,15 @@ var options = {
        '255,71,154'
     ],
     criterion: 'temp2m',
-    nparticles: 1500
+    startParticles: 1500,
+    minParticles: 1500,
+    maxParticles: 15000,
+    minFPS: 20
 };
 
 
 if (!!window.chrome) {
-    options.nparticles = 8000;
+    options.startParticles = 8000;
 }
 
 var t, s;
@@ -317,7 +320,7 @@ function setupCanvas() {
 
 
     // Create particles
-    for (var i = 0; i < options.nparticles; i++) {
+    for (var i = 0; i < options.startParticles; i++) {
         particles[i] = new Particle();
     }
 
@@ -409,7 +412,7 @@ function render() {
     now = Date.now();
     timeDiff = (Date.now() - lastTick) / 16; // timeDiff should be near 1 at 60fps
     lastTick = now;
-
+    
     requestAnimationFrame(render);
 
     bufferCtx.globalAlpha = options.globalAlpha;
@@ -446,10 +449,23 @@ function render() {
     /**
      * FPS counter
      */
-    ctx[0].clearRect(0, 0, 50, height);
+    var fps=fpsCounter(1000 / (timeDiff * 16));
+    
+    ctx[0].clearRect(0, 0, 100, height);
     ctx[0].fillStyle = '#ffffff';
-    ctx[0].fillText(fpsCounter(1000 / (timeDiff * 16)), 0, height);
-
+    ctx[0].fillText(fps, 0, height);
+    ctx[0].fillText(particles.length, 30, height);
+    
+    if (fps > options.minFPS && particles.length < options.maxParticles) {
+      for (var i = 0; i < 100; i++) {
+        particles.push(new Particle());
+      }
+    }
+    if (fps <  options.minFPS && particles.length > options.minParticles) {
+      for (var i = 0; i < 100; i++) {
+        particles.pop();
+      }
+    }
 }
 
 
