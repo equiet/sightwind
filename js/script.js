@@ -489,7 +489,7 @@ function init () {
 
 function init_error (msg) {
   loadingPopup.innerHTML="<h2>Error</h2>";
-  loadingPopup.innerHTML+="<p>Your browser does not support "+msg+" technology.</p>";
+  loadingPopup.innerHTML+="<p>Your browser does not support "+msg+" technology. <a href=\"http://caniuse.com/#search="+msg+"\" target=\"_blank\">Learn more...</a></p>";
   loadingPopup.innerHTML+="<p>Please try with a modern browser such as Mozilla Firefox or Google Chrome.</p>";
 }
 
