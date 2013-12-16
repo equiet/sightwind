@@ -477,7 +477,10 @@ function init () {
     init_error('Typed Arrays');
     return;
   }
-  
+  if (typeof requestAnimationFrame == "undefined") {
+    init_error('requestAnimationFrame()');
+    return;
+  }
   buffer = document.createElement('canvas');
   bufferCtx = buffer.getContext('2d');
   
