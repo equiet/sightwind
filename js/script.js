@@ -462,39 +462,20 @@ document.querySelectorAll('.menu a').forEach(function(el) {
 });
 
 
-var loadingText = document.getElementById("loading-text");
-var loadingPopup = document.getElementById("loading-popup");
+
 
 init();
 
 function init () {
-  var elem = document.createElement('canvas');
-  if (!(elem.getContext && elem.getContext('2d'))) {
-    init_error('Canvas');
-    return;
-  }
-  if (typeof Float32Array == "undefined") {
-    init_error('Typed Arrays');
-    return;
-  }
-  if (typeof requestAnimationFrame == "undefined") {
-    init_error('requestAnimationFrame()');
-    return;
-  }
+  
   buffer = document.createElement('canvas');
   bufferCtx = buffer.getContext('2d');
   
   load_data_from_img('lat');
 }
 
-function init_error (msg) {
-  loadingPopup.innerHTML="<h2>Error</h2>";
-  loadingPopup.innerHTML+="<p>Your browser does not support "+msg+" technology. <a href=\"http://caniuse.com/#search="+msg+"\" target=\"_blank\">Learn more...</a></p>";
-  loadingPopup.innerHTML+="<p>Please try with a modern browser such as Mozilla Firefox or Google Chrome.</p>";
-}
-
 function load_data_from_img (varname) {
-  loadingText.innerHTML+=varname + '...';
+  loadingText.innerHTML+='data: '+varname + '...';
   var img = new Image();
   img.onload=function () {
     var canvas = document.createElement("canvas");

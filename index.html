@@ -74,12 +74,63 @@
 
     </div>
 
-    <!-- <script src="data/data.js"></script> -->
-    <script src="js/d3.js"></script>
-    <script src="js/topojson.v1.js"></script>
-    <!-- <script src="js/jquery-1.10.2.min.js"></script> -->
-    <script src="js/script.js"></script>
-    <script src="data/last.js"></script>
+    <script>
+      
+      var loadingText = document.getElementById("loading-text");
+      var loadingPopup = document.getElementById("loading-popup");
+      
+      function init_error (msg) {
+        loadingPopup.innerHTML="<h2>Error</h2>";
+        loadingPopup.innerHTML+="<p>Your browser does not support "+msg+" technology. <a href=\"http://caniuse.com/#search="+msg+"\" target=\"_blank\">Learn more...</a></p>";
+        loadingPopup.innerHTML+="<p>Please try with a modern browser such as Mozilla Firefox or Google Chrome.</p>";
+      }
+      
+      var scripts_to_load=["js/d3.js", "js/topojson.v1.js", "js/script.js", "data/last.js"];
+      
+      function load_script() {
+	var scriptname=scripts_to_load.shift();
+	loadingText.innerHTML+='script: '+scriptname + '...';
+	var script = document.createElement('script');
+	script.onload=function () {
+	  loadingText.innerHTML+='ok<br>';
+	  if (scripts_to_load.length > 0) {
+	    load_script ();
+	    return;
+	  }
+	};
+        script.src=scriptname;
+        document.body.appendChild(script);
+      }
+         
+      (function(){
+
+        var c = document.createElement('canvas');
+        if (!(c.getContext && c.getContext('2d'))) {
+          init_error('Canvas');
+          return;
+        }
+        if (typeof Float32Array == "undefined") {
+          init_error('Typed Arrays');
+          return;
+        }
+        c.witdh=c.height=1;
+        var ctx=c.getContext('2d');
+        var id=ctx.getImageData(0,0, 1, 1);
+        try {
+	  var test = new Float32Array(id.data.buffer);
+        } catch (e) {
+	  init_error('Typed Arrays');
+          return;
+	}
+        if (typeof requestAnimationFrame == "undefined") {
+          init_error('requestAnimationFrame');
+          return;
+        }
+        
+        load_script();
+
+      })();
+    </script>
 
 </body>
 </html>
