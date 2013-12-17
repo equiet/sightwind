@@ -22,11 +22,13 @@ var options = {
        '255,71,154'
     ],
     criterion: 'temp2m',
-    startParticles: 1500,
+    // startParticles: 1500,
     minParticles: 1500,
     maxParticles: 15000,
-    minFPS: 20
+    minFPS: 15
 };
+
+var currentParticles = options.minParticles;
 
 
 if (!!window.chrome) {
@@ -297,7 +299,7 @@ var particles = [],
     bounds = [];
 function setupCanvas() {
 
-  
+
     // Temperature canvas
     tempCanvas = document.createElement('canvas');
     document.querySelector('.container').appendChild(tempCanvas);
@@ -320,7 +322,7 @@ function setupCanvas() {
 
 
     // Create particles
-    for (var i = 0; i < options.startParticles; i++) {
+    for (var i = 0; i < options.maxParticles; i++) {
         particles[i] = new Particle();
     }
 
@@ -349,8 +351,8 @@ function setupCanvas() {
         }
         var u=data['wind10m_u'][coords[1]*data.nx+coords[0]];
         var v=data['wind10m_v'][coords[1]*data.nx+coords[0]];
-	var speed=Math.round(Math.sqrt(u*u+v*v)*36)/10;
-	var dir=Math.round(((360-Math.atan2(v,u)/Math.PI*180-90)%360)*10)/10;
+  var speed=Math.round(Math.sqrt(u*u+v*v)*36)/10;
+  var dir=Math.round(((360-Math.atan2(v,u)/Math.PI*180-90)%360)*10)/10;
         document.querySelector('.data_wind10m_speed').innerHTML = speed;
         document.querySelector('.data_wind10m_dir').innerHTML = dir;
     });
@@ -371,19 +373,19 @@ function setupBounds(criterion) {
     var max = Math.max.apply(null, data[options.criterion].map(function(item) {
         return Math.max.apply(null, item);
     }));*/
-    
+
     var min = 99999;
     var max = -99999;
     var nvals = data.nx*data.ny;
     for (i=0; i<nvals; i++) {
       var val=data[options.criterion][i];
       if (val < min) {
-	min=val;
+  min=val;
       } else if (val > max){
-	max=val;
+  max=val;
       }
     }
-    
+
     // Find temp bounds
     var step = (max - min) / options.color.length;
     bounds = [];
@@ -412,12 +414,12 @@ function render() {
     now = Date.now();
     timeDiff = (Date.now() - lastTick) / 16; // timeDiff should be near 1 at 60fps
     lastTick = now;
-    
+
     requestAnimationFrame(render);
 
     bufferCtx.globalAlpha = options.globalAlpha;
 
-    for (var j = 0; j < particles.length; j++) {
+    for (var j = 0; j < currentParticles; j++) {
        particles[j].refreshCoords();
        particles[j].tick();
     }
@@ -434,7 +436,7 @@ function render() {
            ctx[i].lineWidth = options.lineWidth;
            ctx[i].strokeStyle = 'rgba(' + options.color[i] + ',' + options.colorAlpha + ')';
 
-           for (var j = 0; j < particles.length; j++) {
+           for (var j = 0; j < currentParticles; j++) {
                var criterion = data[options.criterion][particles[j].dataCoordY*data.nx+particles[j].dataCoordX];
                if (bounds[i].low < criterion && criterion <= bounds[i].high) {
                    ctx[i].moveTo(particles[j].x, particles[j].y);
@@ -450,21 +452,16 @@ function render() {
      * FPS counter
      */
     var fps=fpsCounter(1000 / (timeDiff * 16));
-    
+
     ctx[0].clearRect(0, 0, 100, height);
     ctx[0].fillStyle = '#ffffff';
     ctx[0].fillText(fps, 0, height);
-    ctx[0].fillText(particles.length, 30, height);
-    
-    if (fps > options.minFPS && particles.length < options.maxParticles) {
-      for (var i = 0; i < 100; i++) {
-        particles.push(new Particle());
-      }
-    }
-    if (fps <  options.minFPS && particles.length > options.minParticles) {
-      for (var i = 0; i < 100; i++) {
-        particles.pop();
-      }
+    ctx[0].fillText(currentParticles, 30, height);
+
+    if (fps > options.minFPS) {
+        currentParticles = Math.min(currentParticles + 100, options.maxParticles);
+    } else {
+        currentParticles = Math.max(currentParticles - 100, options.minParticles);
     }
 }
 
@@ -483,10 +480,10 @@ document.querySelectorAll('.menu a').forEach(function(el) {
 init();
 
 function init () {
-  
+
   buffer = document.createElement('canvas');
   bufferCtx = buffer.getContext('2d');
-  
+
   load_data_from_img('lat');
 }
 
@@ -507,8 +504,8 @@ function load_data_from_img (varname) {
     //TODO : implement bytes to float32 without typed arrays
     for (var key in data) {
       if (data[key] === false) {
-	load_data_from_img (key);
-	return;
+  load_data_from_img (key);
+  return;
       }
     }
     data_is_ready();
@@ -520,7 +517,7 @@ function data_is_ready() {
   loadingPopup.style.display='none';
 
   /** Data
-    *    ^ 
+    *    ^
     *  y |
     *    0 —->
     *      x
@@ -532,7 +529,7 @@ function data_is_ready() {
       bottomRight: [data.lon[(data.nx-1)], data.lat[(data.nx-1)]],
   };
 
-  
+
   projTopLeft = projection(corners.topLeft);
   projBottomRight = projection(corners.bottomRight);
 
@@ -543,12 +540,12 @@ function data_is_ready() {
   g.append('polyline')
       .attr('class', 'dataframe')
       .attr('points', [
-	      projection(corners.topLeft),
-	      projection(corners.topRight),
-	      projection(corners.bottomRight),
-	      projection(corners.bottomLeft),
-	      projection(corners.topLeft)
-	  ].map(function (item) { return item.toString(); }).join(' '));
+        projection(corners.topLeft),
+        projection(corners.topRight),
+        projection(corners.bottomRight),
+        projection(corners.bottomLeft),
+        projection(corners.topLeft)
+    ].map(function (item) { return item.toString(); }).join(' '));
 
 
   dataLoaded = true;
