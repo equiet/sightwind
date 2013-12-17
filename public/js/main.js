@@ -1,4 +1,4 @@
-/*globals d3,topojson*/
+/*globals d3,topojson,Q*/
 'use strict';
 
 
@@ -134,6 +134,8 @@ var data = {
   rain: false,
   topo: false
 };
+
+var dataParams = ['lat', 'lon', 'wind10m_u', 'wind10m_v', 'temp2m', 'press', 'rain', 'topo'];
 
 
 var projTopLeft, projBottomRight;
@@ -484,34 +486,72 @@ function init () {
   buffer = document.createElement('canvas');
   bufferCtx = buffer.getContext('2d');
 
-  load_data_from_img('lat');
 }
 
-function load_data_from_img (varname) {
-  loadingText.innerHTML+= varname + '<br>';
-  var img = new Image();
-  img.onload=function () {
-    var canvas = document.createElement("canvas");
-    canvas.width=data.nx;
-    canvas.height=data.ny;
-    var ctx=canvas.getContext("2d");
-    ctx.drawImage(img,0,0);
-    var imageData=ctx.getImageData(0,0, data.nx, data.ny);
-    data[varname] = new Float32Array(imageData.data.buffer);
-    imageData=null;
-    canvas=null;
-    img=null;
-    //TODO : implement bytes to float32 without typed arrays
-    for (var key in data) {
-      if (data[key] === false) {
-  load_data_from_img (key);
-  return;
-      }
-    }
-    data_is_ready();
+
+
+
+function loadDataImage(param) {
+
+  var deferred = Q.defer(),
+      loadingText = document.getElementById('loading-text'),
+      canvas = document.createElement('canvas'),
+      ctx = canvas.getContext('2d'),
+      img = new Image();
+
+  loadingText.innerHTML += param + '<br>';
+
+  canvas.width=data.nx;
+  canvas.height=data.ny;
+
+  img.onload = function() {
+
+    ctx.drawImage(img, 0, 0);
+
+    var imageData = ctx.getImageData(0,0, canvas.width, canvas.height);
+    data[param] = new Float32Array(imageData.data.buffer);
+
+    img = null;
+
+    deferred.resolve();
+
   };
-  img.src="data/data-"+varname+".png";
+
+  img.src = 'data/data-' + param + '.png';
+
+  return deferred.promise;
+
 }
+
+Q.all(dataParams.map(function(param) {
+  return loadDataImage(param);
+})).then(data_is_ready);
+
+// function load_data_from_img (varname) {
+//   loadingText.innerHTML+= varname + '<br>';
+//   var img = new Image();
+//   img.onload=function () {
+//     var canvas = document.createElement("canvas");
+//     canvas.width=data.nx;
+//     canvas.height=data.ny;
+//     var ctx=canvas.getContext("2d");
+//     ctx.drawImage(img,0,0);
+//     var imageData=ctx.getImageData(0,0, data.nx, data.ny);
+//     data[varname] = new Float32Array(imageData.data.buffer);
+//     imageData=null;
+//     canvas=null;
+//     img=null;
+//     //TODO : implement bytes to float32 without typed arrays
+//     for (var key in data) {
+//       if (data[key] === false) {
+//         load_data_from_img(key);
+//         return;
+//       }
+//     }
+//     data_is_ready();
+//   };
+//   img.src="data/data-"+varname+".png";
+// }
 
 function data_is_ready() {
   loadingPopup.style.display='none';
