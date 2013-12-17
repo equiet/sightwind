@@ -1,6 +1,7 @@
 data/eu*
 *~
 data/data-*
-data/data.nc
 data/last.js
+data.nc
 *.kate-swp
+sandbox/*
