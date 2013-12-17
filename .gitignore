@@ -1,7 +1,5 @@
-data/eu*
-*~
-data/data-*
-data/data.nc
-data/last.js
+public/data/data-*
+public/data/last.js
+data.nc
 *.kate-swp
-sightwind.sketch/*
+sandbox/*
