@@ -527,31 +527,6 @@ Q.all(dataParams.map(function(param) {
   return loadDataImage(param);
 })).then(data_is_ready);
 
-// function load_data_from_img (varname) {
-//   loadingText.innerHTML+= varname + '<br>';
-//   var img = new Image();
-//   img.onload=function () {
-//     var canvas = document.createElement("canvas");
-//     canvas.width=data.nx;
-//     canvas.height=data.ny;
-//     var ctx=canvas.getContext("2d");
-//     ctx.drawImage(img,0,0);
-//     var imageData=ctx.getImageData(0,0, data.nx, data.ny);
-//     data[varname] = new Float32Array(imageData.data.buffer);
-//     imageData=null;
-//     canvas=null;
-//     img=null;
-//     //TODO : implement bytes to float32 without typed arrays
-//     for (var key in data) {
-//       if (data[key] === false) {
-//         load_data_from_img(key);
-//         return;
-//       }
-//     }
-//     data_is_ready();
-//   };
-//   img.src="data/data-"+varname+".png";
-// }
 
 function data_is_ready() {
   loadingPopup.style.display='none';
