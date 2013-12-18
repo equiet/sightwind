@@ -112,7 +112,9 @@ var container = document.querySelector('.container'),
         buffer,
         bufferCtx,
         tempCanvas,
-        tempCtx;
+        tempCtx,
+        heatCanvas,
+        heatCtx;
 
 
 var dataLoaded = false;
@@ -234,6 +236,8 @@ function resizeCanvas() {
     buffer.height = document.querySelector('.container').clientHeight;
     tempCanvas.width = document.querySelector('.container').clientWidth;
     tempCanvas.height = document.querySelector('.container').clientHeight;
+    heatCanvas.width = document.querySelector('.container').clientWidth;
+    heatCanvas.height = document.querySelector('.container').clientHeight;
     svg.attr("width", buffer.width);
     svg.attr("height", buffer.height);
     width = buffer.width;
@@ -281,11 +285,11 @@ Particle.prototype.tick = function () {
     }
 };
 Particle.prototype.nextPositionX = function () {
-    this.x = this.x + data.wind10m_u[this.dataCoordY*data.nx+this.dataCoordX] * timeDiff * options.speedFactor;
+    this.x = this.x + data.wind10m_u[this.dataCoordY*data.nx+this.dataCoordX] * timeDiff * options.speedFactor * s;
     return this.x;
 };
 Particle.prototype.nextPositionY = function () {
-    this.y = this.y - data.wind10m_v[this.dataCoordY*data.nx+this.dataCoordX] * timeDiff * options.speedFactor;
+    this.y = this.y - data.wind10m_v[this.dataCoordY*data.nx+this.dataCoordX] * timeDiff * options.speedFactor * s;
     return this.y;
 };
 
@@ -302,18 +306,10 @@ function setupBounds(criterion) {
         }
 
         // Find min/max
-        /*var min = Math.min.apply(null, data[options.criterion].map(function(item) {
-                return Math.min.apply(null, item);
-        })) - 0.1;
-        var max = Math.max.apply(null, data[options.criterion].map(function(item) {
-                return Math.max.apply(null, item);
-        }));*/
-
-        var min = 99999;
-        var max = -99999;
-        var nvals = data.nx*data.ny;
-        for (i=0; i<nvals; i++) {
-            var val=data[options.criterion][i];
+        var min = Infinity,
+            max = -Infinity;
+        for (var i = 0; i < data[options.criterion].length; i++) {
+            var val = data[options.criterion][i];
             if (val < min) {
                 min=val;
             } else if (val > max){
@@ -325,10 +321,10 @@ function setupBounds(criterion) {
         var step = (max - min) / options.color.length;
         bounds = [];
         for (var i = 0; i < options.color.length; i++) {
-                bounds.push({
-                     low: min + step * i,
-                     high: min + step * (i + 1)
-                });
+            bounds.push({
+                 low: min + step * i,
+                 high: min + step * (i + 1)
+            });
         }
 
 }
@@ -350,7 +346,7 @@ function render() {
     timeDiff = (Date.now() - lastTick) / 16; // timeDiff should be near 1 at 60fps
     lastTick = now;
 
-    requestAnimationFrame(render);
+    // requestAnimationFrame(render);
 
     bufferCtx.globalAlpha = options.globalAlpha;
 
@@ -382,6 +378,25 @@ function render() {
         ctxBuckets[i].stroke();
 
     }
+
+
+    /**
+     * Heat map
+     */
+
+    for (var i = 0; i < data['temp2m'].length; i++) {
+        var x = Math.floor(i / data.nx),
+            y = Math.floor(i % data.nx);
+        heatCtx.fillStyle = 'rgba(' + options.color[0] + ',' + Math.max(0, data['temp2m'][i]) + ')';
+        heatCtx.fillRect(
+            x / data.nx * canvasDim.width + canvasOffset.x,
+            y / data.ny * canvasDim.height + canvasOffset.y,
+            2,
+            2
+        );
+    }
+
+
 
     /**
      * FPS counter
@@ -415,18 +430,18 @@ document.querySelectorAll('.header_nav a').forEach(function(el) {
 function loadDataImage(param) {
 
     var deferred = Q.defer(),
-        canvas = document.createElement('canvas'),
-        ctx = canvas.getContext('2d'),
+        loadCanvas = document.createElement('canvas'),
+        loadCtx = loadCanvas.getContext('2d'),
         img = new Image();
 
-    canvas.width = data.nx;
-    canvas.height = data.ny;
+    loadCanvas.width = data.nx;
+    loadCanvas.height = data.ny;
 
     img.onload = function() {
 
-        ctx.drawImage(img, 0, 0);
+        loadCtx.drawImage(img, 0, 0);
 
-        var imageData = ctx.getImageData(0,0, canvas.width, canvas.height);
+        var imageData = loadCtx.getImageData(0,0, loadCanvas.width, loadCanvas.height);
         data[param] = new Float32Array(imageData.data.buffer);
 
         img = null;
@@ -501,6 +516,16 @@ function data_is_ready() {
     bufferCtx = buffer.getContext('2d');
 
 
+    // Heatmap canvas
+    heatCanvas = document.createElement('canvas');
+    document.querySelector('.container').appendChild(tempCanvas);
+    heatCanvas.classList.add('heat');
+    heatCtx = buffer.getContext('2d');
+
+    // heatCtx.fillStyle = "#ffffff";
+    // heatCtx.fillRect(0, 0, 1000, 1000);
+
+
     // Create canvas layers
     for (var i = 0; i < options.color.length; i++) {
         canvasBuckets[i] = document.createElement('canvas');
@@ -508,9 +533,12 @@ function data_is_ready() {
         ctxBuckets[i] = canvasBuckets[i].getContext('2d');
     }
 
+    console.log('aa');
 
     // Resize canvas
     resizeCanvas();
+
+    console.log('aa2');
 
     // Set which paramter will be colored
     setupBounds();

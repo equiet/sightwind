@@ -76,6 +76,7 @@
     </div>
 
     <script src="js/q.min.js"></script>
+    <script src="js/three.min.js"></script>
 
     <script>
 
@@ -141,6 +142,184 @@
 
       ga('create', 'UA-2529322-28', 'sightwind.com');
       ga('send', 'pageview');
+    </script>
+
+
+
+
+
+
+
+    <script type="x-shader/x-vertex" id="vertexshader">
+
+            // switch on high precision floats
+            #ifdef GL_ES
+            precision highp float;
+            #endif
+
+            uniform float amplitude;
+            attribute float displacement;
+            attribute float positionX;
+            attribute float positionY;
+            varying vec3 vNormal;
+
+            void main() {
+
+                vNormal = normal;
+
+                // multiply our displacement by the
+                // amplitude. The amp will get animated
+                // so we'll have animated displacement
+                vec3 newPosition = position +
+                                   normal *
+                                   vec3(displacement *
+                                        amplitude);
+
+                gl_Position = projectionMatrix *
+                              modelViewMatrix *
+                              vec4(newPosition,1.0);
+            }
+        </script>
+
+        <script type="x-shader/x-fragment" id="fragmentshader">
+
+            #ifdef GL_ES
+            precision highp float;
+            #endif
+
+            // same name and type as VS
+            varying vec3 vNormal;
+
+            void main() {
+
+                // calc the dot product and clamp
+                // 0 -> 1 rather than -1 -> 1
+                vec3 light = vec3(0.5,0.2,1.0);
+
+                // ensure it's normalized
+                light = normalize(light);
+
+                float dProd = max(0.0, dot(vNormal, light));
+
+                // feed into our frag colour
+                gl_FragColor = vec4(dProd, dProd, dProd, 1.0);
+
+            }
+
+        </script>
+
+
+
+    <script type="text/javascript">
+
+        // set the scene size
+        var WIDTH = 1000,
+            HEIGHT = 1000;
+
+        // set some camera attributes
+        var VIEW_ANGLE = 45,
+            ASPECT = WIDTH / HEIGHT,
+            NEAR = 1,
+            FAR = 1000;
+
+        // get the DOM element to attach to
+        // - assume we've got jQuery to hand
+        var $container = document.querySelector('.container');
+
+        // create a WebGL renderer, camera
+        // and a scene
+        var renderer = new THREE.WebGLRenderer();
+        var camera = new THREE.OrthographicCamera( WIDTH / -2, WIDTH / 2, HEIGHT / 2, HEIGHT / -2, 0, 1000);
+        var scene = new THREE.Scene();
+
+        // the camera starts at 0,0,0 so pull it back
+        camera.position.z = 300;
+
+        // start the renderer
+        renderer.setSize(WIDTH, HEIGHT);
+
+        // attach the render-supplied DOM element
+        $container.appendChild(renderer.domElement);
+
+        var attributes = {
+            displacement: {
+                type: 'f', // a float
+                value: [] // an empty array
+            },
+            positionX: {
+                type: 'f',
+                value: [0.2, 0.5, 1, 2, 200]
+            },
+            positionY: {
+                type: 'f',
+                value: [0.2, 0.5, 1, 2, 200]
+            }
+        };
+
+            var uniforms = {
+                amplitude: {
+                    type: 'f', // a float
+                    value: 0
+                }
+            };
+
+            // create the sphere's material
+            var shaderMaterial = new THREE.ShaderMaterial({
+                uniforms:       uniforms,
+                attributes:     attributes,
+                vertexShader:   document.querySelector('#vertexshader').innerHTML,
+                fragmentShader: document.querySelector('#fragmentshader').innerHTML
+            });
+
+            // set up the sphere vars
+            var radius = 50, segments = 16, rings = 16;
+
+            // create a new mesh with sphere geometry -
+            // we will cover the sphereMaterial next!
+            var sphere = new THREE.Mesh(
+               new THREE.SphereGeometry(radius, segments, rings),
+               shaderMaterial);
+
+            // now populate the array of attributes
+            var vertices = sphere.geometry.vertices;
+            var values = attributes.displacement.value
+            for(var v = 0; v < vertices.length; v++) {
+                values.push(Math.random() * 30);
+            }
+
+            // My geometry
+            var geometry = new THREE.Geometry();
+
+            for ( var i = 0; i < 100000; i++ ) {
+
+                var vertex = new THREE.Vector3();
+                vertex.x = Math.random() * 2 - 1;
+                vertex.y = Math.random() * 2 - 1;
+                vertex.z = Math.random() * 2 - 1;
+                vertex.multiplyScalar( radius );
+
+                geometry.vertices.push( vertex );
+
+            }
+
+            // add the sphere to the scene
+            scene.add(sphere);
+
+            var frame = 0;
+
+            // draw!
+            function update() {
+
+                uniforms.amplitude.value = Math.sin(frame);
+                frame += 0.1;
+
+                renderer.render(scene, camera);
+
+                // set up the next call
+                requestAnimationFrame(update);
+            }
+            requestAnimationFrame(update);
+
     </script>
 
 </body>
