@@ -1,4 +1,4 @@
-/*globals d3,topojson,Q*/
+/*globals d3,topojson,Q,THREE*/
 'use strict';
 
 
@@ -202,6 +202,12 @@ function move() {
                      x: width / 2 + projTopLeft[0] * s + t[0],
                      y: height / 2 + projTopLeft[1] * s + t[1]
                 };
+                for (var i = 0; i < canvasBuckets.length; i++) {
+                    canvasBuckets[i].width = canvasDim.width;
+                    canvasBuckets[i].height = canvasDim.height;
+                    canvasBuckets[i].style.webkitTransform = 'translate(' + canvasOffset.x + 'px,' + canvasOffset.y + 'px)';
+                }
+                canvasOffset = {x: 0, y: 0};
 
         }
 
@@ -296,7 +302,9 @@ Particle.prototype.nextPositionY = function () {
 
 
 var particles = [],
-    bounds = [];
+    bounds = [],
+    boundsMin,
+    boundsMax;
 
 
 function setupBounds(criterion) {
@@ -306,24 +314,21 @@ function setupBounds(criterion) {
         }
 
         // Find min/max
-        var min = Infinity,
-            max = -Infinity;
+        boundsMin = Infinity,
+        boundsMax = -Infinity;
         for (var i = 0; i < data[options.criterion].length; i++) {
             var val = data[options.criterion][i];
-            if (val < min) {
-                min=val;
-            } else if (val > max){
-                max=val;
-            }
+            boundsMin = Math.min(boundsMin, val);
+            boundsMax = Math.max(boundsMax, val);
         }
 
         // Find temp bounds
-        var step = (max - min) / options.color.length;
+        var step = (boundsMax - boundsMin) / options.color.length;
         bounds = [];
         for (var i = 0; i < options.color.length; i++) {
             bounds.push({
-                 low: min + step * i,
-                 high: min + step * (i + 1)
+                 low: boundsMin + step * i,
+                 high: boundsMin + step * (i + 1)
             });
         }
 
@@ -346,7 +351,7 @@ function render() {
     timeDiff = (Date.now() - lastTick) / 16; // timeDiff should be near 1 at 60fps
     lastTick = now;
 
-    // requestAnimationFrame(render);
+    requestAnimationFrame(render);
 
     bufferCtx.globalAlpha = options.globalAlpha;
 
@@ -377,23 +382,6 @@ function render() {
 
         ctxBuckets[i].stroke();
 
-    }
-
-
-    /**
-     * Heat map
-     */
-
-    for (var i = 0; i < data['temp2m'].length; i++) {
-        var x = Math.floor(i / data.nx),
-            y = Math.floor(i % data.nx);
-        heatCtx.fillStyle = 'rgba(' + options.color[0] + ',' + Math.max(0, data['temp2m'][i]) + ')';
-        heatCtx.fillRect(
-            x / data.nx * canvasDim.width + canvasOffset.x,
-            y / data.ny * canvasDim.height + canvasOffset.y,
-            2,
-            2
-        );
     }
 
 
@@ -458,7 +446,7 @@ function loadDataImage(param) {
 
 Q.all(dataParams.map(function(param) {
     return loadDataImage(param);
-})).then(data_is_ready);
+})).then(data_is_ready).done();
 
 
 function data_is_ready() {
@@ -533,12 +521,8 @@ function data_is_ready() {
         ctxBuckets[i] = canvasBuckets[i].getContext('2d');
     }
 
-    console.log('aa');
-
     // Resize canvas
     resizeCanvas();
-
-    console.log('aa2');
 
     // Set which paramter will be colored
     setupBounds();
@@ -585,8 +569,118 @@ function data_is_ready() {
     });
 
 
+    runWebGL();
 
 }
+
+
+function runWebGL() {
+
+    var $container = document.querySelector('.container');
+
+    // set the scene size
+    var WIDTH = $container.clientWidth,
+        HEIGHT = $container.clientHeight;
+
+
+    // create a WebGL renderer, camera
+    // and a scene
+    var renderer = new THREE.WebGLRenderer();
+    var camera = new THREE.OrthographicCamera( WIDTH / -2, WIDTH / 2, HEIGHT / 2, HEIGHT / -2, 0, 1000);
+    var scene = new THREE.Scene();
+
+    // the camera starts at 0,0,0 so pull it back
+    camera.position.z = 100;
+
+    // start the renderer
+    renderer.setSize(WIDTH, HEIGHT);
+
+    // attach the render-supplied DOM element
+    $container.appendChild(renderer.domElement);
+    renderer.domElement.classList.add('is-heatmap');
+
+    var attributes = {
+        temperature: { type: 'f', value: [] },
+    };
+
+    var uniforms = {
+        startColor: { type: 'c', value: new THREE.Color(0x09202a) },
+        endColor: { type: 'c', value: new THREE.Color(0x1e0829) },
+        minTemperature: { type: 'f', value: boundsMin },
+        maxTemperature: { type: 'f', value: boundsMax }
+    };
+
+    console.log(attributes);
+
+    // create the sphere's material
+    var shaderMaterial = new THREE.ShaderMaterial({
+        uniforms:       uniforms,
+        attributes:     attributes,
+        vertexShader:   document.querySelector('#vertexshader').innerHTML,
+        fragmentShader: document.querySelector('#fragmentshader').innerHTML
+    });
+
+    console.log(uniforms);
+
+    // set up the sphere vars
+    var radius = 50, segments = 16, rings = 16;
+
+    // create a new mesh with sphere geometry -
+    // we will cover the sphereMaterial next!
+
+    // // My geometry
+    var geometry = new THREE.Geometry();
+
+    for ( var i = 0; i < 100; i++ ) {
+
+        var vertex = new THREE.Vector3();
+        vertex.x = Math.random() * 2 - 1;
+        vertex.y = Math.random() * 2 - 1;
+        vertex.z = Math.random() * 2 - 1;
+        vertex.multiplyScalar( radius );
+
+        geometry.vertices.push( vertex );
+
+    }
+        geometry.faces.push(THREE.Face3(0,1,2));
+
+    var geometry = new THREE.PlaneGeometry(WIDTH, HEIGHT, data.nx - 1, data.ny - 1);
+    console.log(geometry);
+
+
+    var sphere = new THREE.Mesh(geometry, shaderMaterial);
+    // var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, segments, rings), shaderMaterial);
+
+    // // add the sphere to the scene
+    scene.add(sphere);
+
+    // // now populate the array of attributes
+    for (var v = 0; v < sphere.geometry.vertices.length; v++) {
+        var x = v % data.nx,
+            y = Math.floor(v / data.nx);
+        attributes.temperature.value[v] = data.temp2m[(data.ny - y) * data.nx + x];
+    }
+
+
+
+
+    var frame = 0;
+
+
+
+    function render() {
+
+        renderer.render(scene, camera);
+        // requestAnimationFrame(render);
+
+    }
+    render();
+
+
+}
+
+
+
 
 function update_time(frame_time) {
     var timeText = document.getElementById("time-text");

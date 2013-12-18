@@ -175,6 +175,9 @@ canvas {
     z-index: 20;
     pointer-events: none;
 }
+	canvas.is-heatmap {
+		z-index: -1;
+	}
 #map {
     position: absolute;
     z-index: 10;
