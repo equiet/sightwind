@@ -373,7 +373,7 @@ function render() {
 
         for (var j = 0; j < currentParticles; j++) {
             var criterion = data[options.criterion][particles[j].dataCoordY*data.nx+particles[j].dataCoordX];
-            if (bounds[i].low < criterion && criterion <= bounds[i].high) {
+            if (bounds[i].low <= criterion && criterion < bounds[i].high) {
                 ctxBuckets[i].moveTo(particles[j].x, particles[j].y);
                 ctxBuckets[i].lineTo(particles[j].nextPositionX(), particles[j].nextPositionY());
             }
