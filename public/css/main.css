@@ -1,6 +1,8 @@
 body {
     margin: 0;
     font: 12px 'Roboto', 'Helvetica', sans-serif;
+    background: #09202A;
+    color: #fff;
 }
 
 a {
@@ -13,57 +15,67 @@ a {
 	}
 
 .header {
-	height: 70px;
-	line-height: 70px;
-	background: #fff;
-	box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+	position: absolute;
+	top: 15px;
+	left: 15px;
+	right: 15px;
+	height: 60px;
+	line-height: 60px;
+	box-shadow: 0 1px 2px rgba(0,0,0,1);
 	padding: 0 20px;
+	background: #fff;
+	z-index: 20;
 }
-.logo {
-	display: inline-block;
-	color: #111;
-	font: 700 30px/70px 'Raleway', 'Helvetica', sans-serif;
-	margin: 0;
+.header_logo {
+	float: left;
+	display: block;
+	color: #333;
+	font: 700 30px/60px 'Raleway', 'Helvetica', sans-serif;
+	margin: 0 20px 0 0;
+	text-transform: lowercase;
 }
-.menu {
-	float: right;
+.header_nav {
+	display: block;
 	margin: 0;
 	padding: 0;
-	margin-top: 17px;
 }
-.menu li {
-	float: left;
-	display: inline-block;
-}
-.menu a {
-	display: block;
-	height: 35px;
-	line-height: 35px;
-	padding: 0 20px;
-	color: #fff;
-	font-size: 11px;
-	font-weight: 700;
-	text-transform: uppercase;
-}
-	.menu a:hover {
-		border: none;
+	.header_nav li {
+		display: block;
+		float: left;
 	}
-.menu_temperature {
-	background: #E54878;
-}
-.menu_topo {
-	background: #883388;
-}
-.menu_rain {
-	background: #42C4CD;
-}
-.menu_pressure {
-	background: #3EC68B
-}
+		.header_nav a {
+			display: inline-block;
+			padding: 0 5px;
+			margin: 0 5px;
+			color: #fff;
+			font-size: 12px;
+			font-weight: 700;
+			line-height: 20px;
+			text-transform: uppercase;
+			border-bottom: 1px solid rgba(0,0,0,0);
+			-webkit-transition: border 0.3s;
+			-moz-transition: border 0.3s;
+			transition: border 0.3s;
+		}
+			.header_nav a:hover {
+				border-bottom-color: rgba(0,0,0,0.1);
+			}
+			.header_nav a.is-temperature {
+				color: #E54878;
+			}
+			.header_nav a.is-topo {
+				color: #B357B3;
+			}
+			.header_nav a.is-rain {
+				color: #42C4CD;
+			}
+			.header_nav a.is-pressure {
+				color: #3EC68B
+			}
 
 .content {
 	position: absolute;
-	top: 70px;
+	top: 0;
 	left: 0;
 	right: 0;
 	bottom: 0;
@@ -76,11 +88,12 @@ a {
 	background: #21333B;
 	box-shadow: 0 1px 2px rgba(0,0,0,0.5);
 	width: 280px;
-	top: 15px;
+	top: 85px;
 	left: 15px;
 	padding: 0 15px;
 	color: #fff;
 	min-height: 40px;
+	z-index: 20;
 	box-sizing: border-box;
 }
 .detail_coordinates {
@@ -132,6 +145,7 @@ a {
 
 .footer {
 	position: absolute;
+	z-index: 20;
 	left: 15px;
 	bottom: 15px;
 	width: 280px;
@@ -148,6 +162,7 @@ a {
 
 .container {
 	position: absolute;
+	z-index: 10;
 	width: 100%;
 	height: 100%;
 	left: 50%;
@@ -210,15 +225,20 @@ svg {
 }
 
 .loading {
-  z-index: 10;
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  background-color: white;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding-top: 50px;
-  text-align: center;
-  font: 12px 'Helvetica', sans-serif;
+	z-index: 15;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	padding: 0 20px;
+	-webkit-transform: translate(-50%,-50%);
+	-moz-transform: translate(-50%,-50%);
+	transform: translate(-50%,-50%);
+	text-align: center;
+	background: #fff;
+	color: #333;
+	font: 12px 'Helvetica', sans-serif;
 }
+	.loading img {
+		display: inline-block;
+		-webkit-transform: translateY(3px);
+	}

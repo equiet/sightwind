@@ -11,22 +11,23 @@
 <body>
 
     <header class="header">
-        <h1 class="logo">sightwind</h1>
-        <ul class="menu">
-            <li><a href="#" data-criterion="temp2m" class="menu_temperature">Temperature</a></li>
-            <li><a href="#" data-criterion="topo" class="menu_topo">Topology</a></li>
-            <li><a href="#" data-criterion="rain" class="menu_rain">Rain</a></li>
-            <li><a href="#" data-criterion="press" class="menu_pressure">Pressure</a></li>
+        <h1 class="header_logo">SightWind</h1>
+        <ul class="header_nav">
+            <li><a href="#" data-criterion="temp2m" class="is-temperature">Temperature</a></li>
+            <li><a href="#" data-criterion="topo" class="is-topo">Topology</a></li>
+            <li><a href="#" data-criterion="rain" class="is-rain">Rain</a></li>
+            <li><a href="#" data-criterion="press" class="is-pressure">Pressure</a></li>
         </ul>
     </header>
 
     <div class="content">
 
-	<div class="loading" id="loading-popup">
-	  <h3>Loading in progress...
-	  <img src="data:image/gif;base64,R0lGODlhEAAQAPQAAP///wAAAPj4+Dg4OISEhAYGBiYmJtbW1qioqBYWFnZ2dmZmZuTk5JiYmMbGxkhISFZWVgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAAFUCAgjmRpnqUwFGwhKoRgqq2YFMaRGjWA8AbZiIBbjQQ8AmmFUJEQhQGJhaKOrCksgEla+KIkYvC6SJKQOISoNSYdeIk1ayA8ExTyeR3F749CACH5BAkKAAAALAAAAAAQABAAAAVoICCKR9KMaCoaxeCoqEAkRX3AwMHWxQIIjJSAZWgUEgzBwCBAEQpMwIDwY1FHgwJCtOW2UDWYIDyqNVVkUbYr6CK+o2eUMKgWrqKhj0FrEM8jQQALPFA3MAc8CQSAMA5ZBjgqDQmHIyEAIfkECQoAAAAsAAAAABAAEAAABWAgII4j85Ao2hRIKgrEUBQJLaSHMe8zgQo6Q8sxS7RIhILhBkgumCTZsXkACBC+0cwF2GoLLoFXREDcDlkAojBICRaFLDCOQtQKjmsQSubtDFU/NXcDBHwkaw1cKQ8MiyEAIfkECQoAAAAsAAAAABAAEAAABVIgII5kaZ6AIJQCMRTFQKiDQx4GrBfGa4uCnAEhQuRgPwCBtwK+kCNFgjh6QlFYgGO7baJ2CxIioSDpwqNggWCGDVVGphly3BkOpXDrKfNm/4AhACH5BAkKAAAALAAAAAAQABAAAAVgICCOZGmeqEAMRTEQwskYbV0Yx7kYSIzQhtgoBxCKBDQCIOcoLBimRiFhSABYU5gIgW01pLUBYkRItAYAqrlhYiwKjiWAcDMWY8QjsCf4DewiBzQ2N1AmKlgvgCiMjSQhACH5BAkKAAAALAAAAAAQABAAAAVfICCOZGmeqEgUxUAIpkA0AMKyxkEiSZEIsJqhYAg+boUFSTAkiBiNHks3sg1ILAfBiS10gyqCg0UaFBCkwy3RYKiIYMAC+RAxiQgYsJdAjw5DN2gILzEEZgVcKYuMJiEAOwAAAAAAAAAAAA=="></h3>
-	  <div id="loading-text"></div>
-	</div>
+        <div class="loading" id="loading-popup">
+            <h3>
+                Loading...
+                <img src="data:image/gif;base64,R0lGODlhEAAQAPQAAP///wAAAPj4+Dg4OISEhAYGBiYmJtbW1qioqBYWFnZ2dmZmZuTk5JiYmMbGxkhISFZWVgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAAFUCAgjmRpnqUwFGwhKoRgqq2YFMaRGjWA8AbZiIBbjQQ8AmmFUJEQhQGJhaKOrCksgEla+KIkYvC6SJKQOISoNSYdeIk1ayA8ExTyeR3F749CACH5BAkKAAAALAAAAAAQABAAAAVoICCKR9KMaCoaxeCoqEAkRX3AwMHWxQIIjJSAZWgUEgzBwCBAEQpMwIDwY1FHgwJCtOW2UDWYIDyqNVVkUbYr6CK+o2eUMKgWrqKhj0FrEM8jQQALPFA3MAc8CQSAMA5ZBjgqDQmHIyEAIfkECQoAAAAsAAAAABAAEAAABWAgII4j85Ao2hRIKgrEUBQJLaSHMe8zgQo6Q8sxS7RIhILhBkgumCTZsXkACBC+0cwF2GoLLoFXREDcDlkAojBICRaFLDCOQtQKjmsQSubtDFU/NXcDBHwkaw1cKQ8MiyEAIfkECQoAAAAsAAAAABAAEAAABVIgII5kaZ6AIJQCMRTFQKiDQx4GrBfGa4uCnAEhQuRgPwCBtwK+kCNFgjh6QlFYgGO7baJ2CxIioSDpwqNggWCGDVVGphly3BkOpXDrKfNm/4AhACH5BAkKAAAALAAAAAAQABAAAAVgICCOZGmeqEAMRTEQwskYbV0Yx7kYSIzQhtgoBxCKBDQCIOcoLBimRiFhSABYU5gIgW01pLUBYkRItAYAqrlhYiwKjiWAcDMWY8QjsCf4DewiBzQ2N1AmKlgvgCiMjSQhACH5BAkKAAAALAAAAAAQABAAAAVfICCOZGmeqEgUxUAIpkA0AMKyxkEiSZEIsJqhYAg+boUFSTAkiBiNHks3sg1ILAfBiS10gyqCg0UaFBCkwy3RYKiIYMAC+RAxiQgYsJdAjw5DN2gILzEEZgVcKYuMJiEAOwAAAAAAAAAAAA==">
+            </h3>
+        </div>
 
         <div class="container">
             <svg></svg>
@@ -90,15 +91,14 @@
       var scripts_to_load=["js/d3.js", "js/topojson.v1.js", "js/main.js", "data/last.js"];
 
       function load_script() {
-	var scriptname=scripts_to_load.shift();
-	loadingText.innerHTML+=scriptname + '<br>';
-	var script = document.createElement('script');
-	script.onload=function () {
-	  if (scripts_to_load.length > 0) {
-	    load_script ();
-	    return;
-	  }
-	};
+    var scriptname=scripts_to_load.shift();
+    var script = document.createElement('script');
+    script.onload=function () {
+      if (scripts_to_load.length > 0) {
+        load_script ();
+        return;
+      }
+    };
         script.src=scriptname;
         document.body.appendChild(script);
       }
@@ -118,11 +118,11 @@
         var ctx=c.getContext('2d');
         var id=ctx.getImageData(0,0, 1, 1);
         try {
-	  var test = new Float32Array(id.data.buffer);
+      var test = new Float32Array(id.data.buffer);
         } catch (e) {
-	  init_error('Typed Arrays');
+      init_error('Typed Arrays');
           return;
-	}
+    }
         if (typeof requestAnimationFrame == "undefined") {
           init_error('requestAnimationFrame');
           return;

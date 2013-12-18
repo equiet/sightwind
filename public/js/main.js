@@ -4,36 +4,31 @@
 
 
 var now = Date.now(),
-    timeDiff,
-    lastTick = Date.now();
+        timeDiff,
+        lastTick = Date.now();
 
 var options = {
-    speedFactor: 0.04,
-    lifeTime: 1000,
-    lineWidth: 1,
-    colorAlpha: 0.6,
-    globalAlpha: 0.94,
-    color: [
-       '71,132,255',
-       '110,118,233',
-       '149,105,211',
-       '189,92,190',
-       '228,79,168',
-       '255,71,154'
-    ],
-    criterion: 'temp2m',
-    // startParticles: 1500,
-    minParticles: 1500,
-    maxParticles: 15000,
-    minFPS: 15
+        speedFactor: 0.05,
+        lifeTime: 1000,
+        lineWidth: 1,
+        colorAlpha: 0.6,
+        globalAlpha: 0.96,
+        color: [
+             '71,132,255',
+             '110,118,233',
+             '149,105,211',
+             '189,92,190',
+             '228,79,168',
+             '255,71,154'
+        ],
+        criterion: 'temp2m',
+        minParticles: 1500,
+        maxParticles: 10000,
+        minFPS: 20
 };
 
 var currentParticles = options.minParticles;
 
-
-if (!!window.chrome) {
-    options.startParticles = 8000;
-}
 
 var t, s;
 var mouseBuffer = {x: 0, y: 0};
@@ -47,12 +42,12 @@ var width = document.querySelector('.container').clientWidth,
 var grid_center = {lat: 47.5, lon: 4};
 
 var projection = d3.geo.conicConformal()
-                .center([47.5, 4])
-                .scale(width)
-                .rotate([-grid_center.lon, 0])
-                .parallels([47.5, 47.5])
-                .translate([width, height])
-                .precision(0.1);
+                                .center([47.5, 4])
+                                .scale(width)
+                                .rotate([-grid_center.lon, 0])
+                                .parallels([47.5, 47.5])
+                                .translate([width, height])
+                                .precision(0.1);
 
 // var projection = d3.geo.mercator()
 //     .scale(width)
@@ -72,21 +67,21 @@ var path = d3.geo.path()
 .projection(projection);
 
 var zoom = d3.behavior.zoom()
-    .center([width/2, height/2])
-    .scaleExtent([0, 3])
-    .on("zoom", move);
+        .center([width/2, height/2])
+        .scaleExtent([0, 3])
+        .on("zoom", move);
 
 
 var graticule = d3.geo.graticule()
-    .extent([[-90,0], [90, 90]])
-    .step([5, 5]);
+        .extent([[-90,0], [90, 90]])
+        .step([5, 5]);
 
 var svg = d3.select("svg")
-    .attr("width", width)
-    .attr("height", height)
-    .append("g")
-       .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
-       .call(zoom);
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+             .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+             .call(zoom);
 var g = svg.append('g');
 
 
@@ -98,41 +93,41 @@ var g = svg.append('g');
 var countries = g.append('g').attr('class', 'countries');
 
 var graticulePath = g.append("path")
-    .datum(graticule)
-    .attr("class", "graticule")
-    .attr("d", path);
+        .datum(graticule)
+        .attr("class", "graticule")
+        .attr("d", path);
 
 var cursor = g.append('circle')
-    .attr('cx', 0)
-    .attr('cy', 0)
-    .attr('r', 5)
-    .attr('class', 'cursor');
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .attr('r', 5)
+        .attr('class', 'cursor');
 
 
 
 
 var container = document.querySelector('.container'),
-    canvas = [],
-    ctx = [],
-    buffer,
-    bufferCtx,
-    tempCanvas,
-    tempCtx;
+        canvasBuckets = [],
+        ctxBuckets = [],
+        buffer,
+        bufferCtx,
+        tempCanvas,
+        tempCtx;
 
 
 var dataLoaded = false;
 
 var data = {
-  nx: 495,
-  ny: 309,
-  lat: false,
-  lon: false,
-  wind10m_u: false,
-  wind10m_v: false,
-  temp2m: false,
-  press: false,
-  rain: false,
-  topo: false
+    nx: 495,
+    ny: 309,
+    lat: false,
+    lon: false,
+    wind10m_u: false,
+    wind10m_v: false,
+    temp2m: false,
+    press: false,
+    rain: false,
+    topo: false
 };
 
 var dataParams = ['lat', 'lon', 'wind10m_u', 'wind10m_v', 'temp2m', 'press', 'rain', 'topo'];
@@ -150,12 +145,12 @@ var canvasDim, canvasOffset;
 
 d3.json('data/world-50m.json', function(error, world) {
 
-    countries.selectAll('path')
-       .data(topojson.feature(world, world.objects.countries).features)
-       .enter().append('path')
-            // .attr('class', 'country')
-            .attr('class', function(d,i) { return 'country countr-' + d.id; })
-            .attr('d', path);
+        countries.selectAll('path')
+             .data(topojson.feature(world, world.objects.countries).features)
+             .enter().append('path')
+                        // .attr('class', 'country')
+                        .attr('class', function(d,i) { return 'country countr-' + d.id; })
+                        .attr('d', path);
 
 });
 
@@ -165,56 +160,57 @@ d3.json('data/world-50m.json', function(error, world) {
 
 function move() {
 
-    if (d3.event) {
-       t = d3.event.translate;
-       s = d3.event.scale;
-    } else {
-       t = [0,0];
-       s = 1;
-    }
+        if (d3.event) {
+             t = d3.event.translate;
+             s = d3.event.scale;
+        } else {
+             t = [0,0];
+             s = 1;
+        }
 
 
-    // var originalT = [t[0], t[1]];
-    // mouseBuffer.x = originalT[0] - t[0];
-    // mouseBuffer.y = originalT[1] - t[1];
-    // t[0] = clamp(t[0] - mouseBuffer.x, (width - canvasDim.width) / 2, -(width - canvasDim.width) / 2);
-    // t[1] = clamp(t[1] - mouseBuffer.y, (height - canvasDim.height) / 2, -(height - canvasDim.height) / 2);
-    // if (width > canvasDim.width) {
-    //     t[0] = 0;
-    // }
-    // if (height > canvasDim.height) {
-    //     t[1] = 1;
-    // }
+        // var originalT = [t[0], t[1]];
+        // mouseBuffer.x = originalT[0] - t[0];
+        // mouseBuffer.y = originalT[1] - t[1];
+        // t[0] = clamp(t[0] - mouseBuffer.x, (width - canvasDim.width) / 2, -(width - canvasDim.width) / 2);
+        // t[1] = clamp(t[1] - mouseBuffer.y, (height - canvasDim.height) / 2, -(height - canvasDim.height) / 2);
+        // if (width > canvasDim.width) {
+        //     t[0] = 0;
+        // }
+        // if (height > canvasDim.height) {
+        //     t[1] = 1;
+        // }
 
 
-    g.style("stroke-width", 1 / s).attr("transform", "translate(" + [t[0],t[1]] + ")scale(" + s + ")");
+        g.style("stroke-width", 1 / s).attr("transform", "translate(" + [t[0],t[1]] + ")scale(" + s + ")");
 
-    graticulePath.style('stroke-width', 1/s);
+        graticulePath.style('stroke-width', 1/s);
 
-    for (var i = 0; i < ctx.length; i++) {
-        ctx[i].clearRect(0,0,canvas[i].width, canvas[i].height);
-    }
+        for (var i = 0; i < ctxBuckets.length; i++) {
+            ctxBuckets[i].clearRect(0, 0, canvasBuckets[i].width, canvasBuckets[i].height);
+        }
 
-    if (dataLoaded) {
+        if (dataLoaded) {
 
-        canvasDim = {
-           width: (projBottomRight[0] - projTopLeft[0]) * s,
-           height: -(projTopLeft[1] - projBottomRight[1]) * s
-        };
-        canvasOffset = {
-           x: width / 2 + projTopLeft[0] * s + t[0],
-           y: height / 2 + projTopLeft[1] * s + t[1]
-        };
+                canvasDim = {
+                     width: (projBottomRight[0] - projTopLeft[0]) * s,
+                     height: -(projTopLeft[1] - projBottomRight[1]) * s
+                };
+                canvasOffset = {
+                     x: width / 2 + projTopLeft[0] * s + t[0],
+                     y: height / 2 + projTopLeft[1] * s + t[1]
+                };
 
-    }
+        }
 
 }
 
 
 
 function resizeCanvas() {
+
     var windowAspectRatio = window.innerWidth / window.innerHeight,
-       containerAspectRatio = container.clientWidth / container.clientHeight;
+        containerAspectRatio = container.clientWidth / container.clientHeight;
 
     if (windowAspectRatio > containerAspectRatio) {
         container.style.width = (window.innerHeight * containerAspectRatio) + 'px';
@@ -229,11 +225,9 @@ function resizeCanvas() {
     container.style.height = height + 'px';
 
 
-    for (var i = 0; i < canvas.length; i++) {
-        canvas[i].width = document.querySelector('.container').clientWidth;
-        canvas[i].height = document.querySelector('.container').clientHeight;
-        // ctx[i].setTransform(canvasMapWidth / canvas[i].width, 0, (canvas[i].width - canvasMapWidth) / 2,
-        // canvasMapHeight / canvas[i].height, 0, (canvas[i].height - canvasMapHeight) / 2);
+    for (var i = 0; i < canvasBuckets.length; i++) {
+        canvasBuckets[i].width = document.querySelector('.container').clientWidth;
+        canvasBuckets[i].height = document.querySelector('.container').clientHeight;
     }
 
     buffer.width = document.querySelector('.container').clientWidth;
@@ -251,7 +245,7 @@ window.addEventListener('resize', resizeCanvas);
 
 
 function clamp(val, min, max) {
-    return Math.min(Math.max(val, min), max);
+        return Math.min(Math.max(val, min), max);
 }
 
 
@@ -299,104 +293,43 @@ Particle.prototype.nextPositionY = function () {
 
 var particles = [],
     bounds = [];
-function setupCanvas() {
-
-
-    // Temperature canvas
-    tempCanvas = document.createElement('canvas');
-    document.querySelector('.container').appendChild(tempCanvas);
-    tempCtx = tempCanvas.getContext('2d');
-
-
-    // Create canvas layers
-    for (var i = 0; i < options.color.length; i++) {
-        canvas[i] = document.createElement('canvas');
-        document.querySelector('.container').appendChild(canvas[i]);
-        ctx[i] = canvas[i].getContext('2d');
-    }
-
-    // Resize canvas
-    resizeCanvas();
-
-
-    // Set which paramter will be colored
-    setupBounds();
-
-
-    // Create particles
-    for (var i = 0; i < options.maxParticles; i++) {
-        particles[i] = new Particle();
-    }
-
-    // Start rendering
-    render();
-
-
-    // Mouse event
-    var container = document.querySelector('.container'),
-        header = document.querySelector('.header');
-
-    container.addEventListener('mousemove', function(e) {
-        var coords = getDataCoords(e.pageX, e.pageY - header.clientHeight);
-        var proj = projection([data.lon[coords[1]*data.nx+coords[0]], data.lat[coords[1]*data.nx+coords[0]]]);
-        cursor.attr('transform', 'translate(' + proj + ')');
-        for (var key in data) {
-            if (data.hasOwnProperty(key)) {
-                if (document.querySelector('.data_' + key)) {
-                    if (key == 'lat' || key == 'lon') {
-                      document.querySelector('.data_' + key).innerHTML = Math.round(data[key][coords[1]*data.nx+coords[0]]*100)/100;
-                    } else {
-                      document.querySelector('.data_' + key).innerHTML = Math.round(data[key][coords[1]*data.nx+coords[0]]*10)/10;
-                    }
-                }
-            }
-        }
-        var u=data['wind10m_u'][coords[1]*data.nx+coords[0]];
-        var v=data['wind10m_v'][coords[1]*data.nx+coords[0]];
-  var speed=Math.round(Math.sqrt(u*u+v*v)*36)/10;
-  var dir=Math.round(((360-Math.atan2(v,u)/Math.PI*180-90)%360)*10)/10;
-        document.querySelector('.data_wind10m_speed').innerHTML = speed;
-        document.querySelector('.data_wind10m_dir').innerHTML = dir;
-    });
-
-}
 
 
 function setupBounds(criterion) {
 
-    if (criterion) {
-        options.criterion = criterion;
-    }
+        if (criterion) {
+            options.criterion = criterion;
+        }
 
-    // Find min/max
-    /*var min = Math.min.apply(null, data[options.criterion].map(function(item) {
-        return Math.min.apply(null, item);
-    })) - 0.1;
-    var max = Math.max.apply(null, data[options.criterion].map(function(item) {
-        return Math.max.apply(null, item);
-    }));*/
+        // Find min/max
+        /*var min = Math.min.apply(null, data[options.criterion].map(function(item) {
+                return Math.min.apply(null, item);
+        })) - 0.1;
+        var max = Math.max.apply(null, data[options.criterion].map(function(item) {
+                return Math.max.apply(null, item);
+        }));*/
 
-    var min = 99999;
-    var max = -99999;
-    var nvals = data.nx*data.ny;
-    for (i=0; i<nvals; i++) {
-      var val=data[options.criterion][i];
-      if (val < min) {
-  min=val;
-      } else if (val > max){
-  max=val;
-      }
-    }
+        var min = 99999;
+        var max = -99999;
+        var nvals = data.nx*data.ny;
+        for (i=0; i<nvals; i++) {
+            var val=data[options.criterion][i];
+            if (val < min) {
+                min=val;
+            } else if (val > max){
+                max=val;
+            }
+        }
 
-    // Find temp bounds
-    var step = (max - min) / options.color.length;
-    bounds = [];
-    for (var i = 0; i < options.color.length; i++) {
-        bounds.push({
-           low: min + step * i,
-           high: min + step * (i + 1)
-        });
-    }
+        // Find temp bounds
+        var step = (max - min) / options.color.length;
+        bounds = [];
+        for (var i = 0; i < options.color.length; i++) {
+                bounds.push({
+                     low: min + step * i,
+                     high: min + step * (i + 1)
+                });
+        }
 
 }
 
@@ -405,8 +338,8 @@ function setupBounds(criterion) {
 var fpsCounter = function() {
     var fps = 0;
     return function (newFps) {
-        fps = (fps * 4 + newFps) / 5;
-        return Math.floor(fps * 10) / 10;
+            fps = (fps * 4 + newFps) / 5;
+            return Math.floor(fps * 10) / 10;
     };
 }();
 
@@ -426,50 +359,51 @@ function render() {
        particles[j].tick();
     }
 
-    for (var i = 0; i < canvas.length; i++) {
+    for (var i = 0; i < canvasBuckets.length; i++) {
 
-       bufferCtx.clearRect(0, 0, buffer.width, buffer.height);
-       bufferCtx.drawImage(canvas[i], 0, 0);
-       ctx[i].clearRect(0, 0, canvas[i].width, canvas[i].height);
-       ctx[i].drawImage(buffer, 0, 0);
+        bufferCtx.clearRect(0, 0, buffer.width, buffer.height);
+        bufferCtx.drawImage(canvasBuckets[i], 0, 0);
+        ctxBuckets[i].clearRect(0, 0, canvasBuckets[i].width, canvasBuckets[i].height);
+        ctxBuckets[i].drawImage(buffer, 0, 0);
 
-       ctx[i].beginPath();
+        ctxBuckets[i].beginPath();
 
-           ctx[i].lineWidth = options.lineWidth;
-           ctx[i].strokeStyle = 'rgba(' + options.color[i] + ',' + options.colorAlpha + ')';
+        ctxBuckets[i].lineWidth = options.lineWidth;
+        ctxBuckets[i].strokeStyle = 'rgba(' + options.color[i] + ',' + options.colorAlpha + ')';
 
-           for (var j = 0; j < currentParticles; j++) {
-               var criterion = data[options.criterion][particles[j].dataCoordY*data.nx+particles[j].dataCoordX];
-               if (bounds[i].low < criterion && criterion <= bounds[i].high) {
-                   ctx[i].moveTo(particles[j].x, particles[j].y);
-                   ctx[i].lineTo(particles[j].nextPositionX(), particles[j].nextPositionY());
-               }
-           }
+        for (var j = 0; j < currentParticles; j++) {
+            var criterion = data[options.criterion][particles[j].dataCoordY*data.nx+particles[j].dataCoordX];
+            if (bounds[i].low < criterion && criterion <= bounds[i].high) {
+                ctxBuckets[i].moveTo(particles[j].x, particles[j].y);
+                ctxBuckets[i].lineTo(particles[j].nextPositionX(), particles[j].nextPositionY());
+            }
+        }
 
-       ctx[i].stroke();
+        ctxBuckets[i].stroke();
 
     }
 
     /**
      * FPS counter
      */
-    var fps=fpsCounter(1000 / (timeDiff * 16));
+     var fps = fpsCounter(1000 / (timeDiff * 16));
 
-    ctx[0].clearRect(0, 0, 100, height);
-    ctx[0].fillStyle = '#ffffff';
-    ctx[0].fillText(fps, 0, height);
-    ctx[0].fillText(currentParticles, 30, height);
+     ctxBuckets[0].clearRect(0, 0, 100, height);
+     ctxBuckets[0].fillStyle = '#ffffff';
+     ctxBuckets[0].fillText(fps, 0, height);
+     ctxBuckets[0].fillText(currentParticles, 30, height);
 
-    if (fps > options.minFPS) {
+     if (fps > options.minFPS) {
         currentParticles = Math.min(currentParticles + 100, options.maxParticles);
     } else {
         currentParticles = Math.max(currentParticles - 100, options.minParticles);
     }
+
 }
 
 
 NodeList.prototype.forEach = Array.prototype.forEach;
-document.querySelectorAll('.menu a').forEach(function(el) {
+document.querySelectorAll('.header_nav a').forEach(function(el) {
     el.addEventListener('click', function(e) {
         e.preventDefault();
         setupBounds(el.dataset.criterion);
@@ -478,111 +412,168 @@ document.querySelectorAll('.menu a').forEach(function(el) {
 
 
 
-
-init();
-
-function init () {
-
-  buffer = document.createElement('canvas');
-  bufferCtx = buffer.getContext('2d');
-
-}
-
-
-
-
 function loadDataImage(param) {
 
-  var deferred = Q.defer(),
-      loadingText = document.getElementById('loading-text'),
-      canvas = document.createElement('canvas'),
-      ctx = canvas.getContext('2d'),
-      img = new Image();
+    var deferred = Q.defer(),
+        canvas = document.createElement('canvas'),
+        ctx = canvas.getContext('2d'),
+        img = new Image();
 
-  loadingText.innerHTML += param + '<br>';
+    canvas.width = data.nx;
+    canvas.height = data.ny;
 
-  canvas.width=data.nx;
-  canvas.height=data.ny;
+    img.onload = function() {
 
-  img.onload = function() {
+        ctx.drawImage(img, 0, 0);
 
-    ctx.drawImage(img, 0, 0);
+        var imageData = ctx.getImageData(0,0, canvas.width, canvas.height);
+        data[param] = new Float32Array(imageData.data.buffer);
 
-    var imageData = ctx.getImageData(0,0, canvas.width, canvas.height);
-    data[param] = new Float32Array(imageData.data.buffer);
+        img = null;
 
-    img = null;
+        deferred.resolve();
 
-    deferred.resolve();
+    };
 
-  };
+    img.src = 'data/data-' + param + '.png';
 
-  img.src = 'data/data-' + param + '.png';
-
-  return deferred.promise;
+    return deferred.promise;
 
 }
 
 Q.all(dataParams.map(function(param) {
-  return loadDataImage(param);
+    return loadDataImage(param);
 })).then(data_is_ready);
 
 
 function data_is_ready() {
-  loadingPopup.style.display='none';
-
-  /** Data
-    *    ^
-    *  y |
-    *    0 —->
-    *      x
-    */
-  corners = {
-      topLeft: [data.lon[data.nx*(data.ny-1)], data.lat[data.nx*(data.ny-1)]],
-      topRight: [data.lon[data.ny*data.nx-1], data.lat[data.ny*data.nx-1]],
-      bottomLeft: [data.lon[0], data.lat[0]],
-      bottomRight: [data.lon[(data.nx-1)], data.lat[(data.nx-1)]],
-  };
 
 
-  projTopLeft = projection(corners.topLeft);
-  projBottomRight = projection(corners.bottomRight);
+    loadingPopup.style.display='none';
+
+    /** Data
+        *    ^
+        *  y |
+        *    0 —->
+        *      x
+        */
+    corners = {
+        topLeft: [data.lon[data.nx*(data.ny-1)], data.lat[data.nx*(data.ny-1)]],
+        topRight: [data.lon[data.ny*data.nx-1], data.lat[data.ny*data.nx-1]],
+        bottomLeft: [data.lon[0], data.lat[0]],
+        bottomRight: [data.lon[(data.nx-1)], data.lat[(data.nx-1)]],
+    };
 
 
-  /**
-    * Draw control dataframe
-    */
-  g.append('polyline')
-      .attr('class', 'dataframe')
-      .attr('points', [
-        projection(corners.topLeft),
-        projection(corners.topRight),
-        projection(corners.bottomRight),
-        projection(corners.bottomLeft),
-        projection(corners.topLeft)
-    ].map(function (item) { return item.toString(); }).join(' '));
+    projTopLeft = projection(corners.topLeft);
+    projBottomRight = projection(corners.bottomRight);
 
 
-  dataLoaded = true;
 
-  move();
-  setupCanvas();
+    /**
+     * Draw control dataframe
+     */
+    g.append('polyline')
+            .attr('class', 'dataframe')
+            .attr('points', [
+                projection(corners.topLeft),
+                projection(corners.topRight),
+                projection(corners.bottomRight),
+                projection(corners.bottomLeft),
+                projection(corners.topLeft)
+        ].map(function (item) { return item.toString(); }).join(' '));
+
+
+    dataLoaded = true;
+
+    move();
+
+
+
+    // Temperature canvas
+    tempCanvas = document.createElement('canvas');
+    document.querySelector('.container').appendChild(tempCanvas);
+    tempCtx = tempCanvas.getContext('2d');
+
+
+    // Buffer canvas
+    buffer = document.createElement('canvas');
+    bufferCtx = buffer.getContext('2d');
+
+
+    // Create canvas layers
+    for (var i = 0; i < options.color.length; i++) {
+        canvasBuckets[i] = document.createElement('canvas');
+        document.querySelector('.container').appendChild(canvasBuckets[i]);
+        ctxBuckets[i] = canvasBuckets[i].getContext('2d');
+    }
+
+
+    // Resize canvas
+    resizeCanvas();
+
+    // Set which paramter will be colored
+    setupBounds();
+
+
+    // Create particles
+    for (var i = 0; i < options.maxParticles; i++) {
+        particles[i] = new Particle();
+    }
+
+
+    // Start rendering
+    render();
+
+    // Mouse event
+    var container = document.querySelector('.container'),
+        header = document.querySelector('.header');
+
+    container.addEventListener('mousemove', function(e) {
+
+        var coords = getDataCoords(e.pageX, e.pageY),
+            proj = projection([data.lon[coords[1]*data.nx+coords[0]], data.lat[coords[1]*data.nx+coords[0]]]);
+
+        cursor.attr('transform', 'translate(' + proj + ')');
+
+        dataParams.forEach(function(value) {
+            if (document.querySelector('.data_' + value)) {
+                if (value == 'lat' || value == 'lon') {
+                    document.querySelector('.data_' + value).innerHTML = Math.round(data[value][coords[1]*data.nx+coords[0]]*100)/100;
+                } else {
+                    document.querySelector('.data_' + value).innerHTML = Math.round(data[value][coords[1]*data.nx+coords[0]]*10)/10;
+                }
+            }
+        });
+
+        var u = data['wind10m_u'][coords[1]*data.nx+coords[0]],
+            v = data['wind10m_v'][coords[1]*data.nx+coords[0]],
+            speed = Math.round(Math.sqrt(u*u+v*v)*36)/10,
+            dir = Math.round(((360-Math.atan2(v,u)/Math.PI*180-90)%360)*10)/10;
+
+        document.querySelector('.data_wind10m_speed').innerHTML = speed;
+        document.querySelector('.data_wind10m_dir').innerHTML = dir;
+
+    });
+
+
+
 }
 
 function update_time(frame_time) {
-  var timeText = document.getElementById("time-text");
-  var d = new Date(0);
-  d.setUTCMilliseconds(frame_time*1000);
-  var hour=d.getHours();
-  var minutes=d.getMinutes();
-  if (hour < 10) hour = "0"+hour;
-  if (minutes < 10) minutes = "0"+minutes;
-  timeText.innerHTML=d.toLocaleDateString()+", "+hour+":"+minutes;
-  var tz=-1*d.getTimezoneOffset()/60;
-  if (tz > 0) {
-    timeText.innerHTML+=" UTC+"+tz;
-  } else {
-    tz *= -1;
-    timeText.innerHTML+=" UTC-"+tz;
-  }
+    var timeText = document.getElementById("time-text");
+    var d = new Date(0);
+    d.setUTCMilliseconds(frame_time*1000);
+    var hour=d.getHours();
+    var minutes=d.getMinutes();
+    if (hour < 10) hour = "0"+hour;
+    if (minutes < 10) minutes = "0"+minutes;
+    timeText.innerHTML=d.toLocaleDateString()+", "+hour+":"+minutes;
+    var tz=-1*d.getTimezoneOffset()/60;
+    if (tz > 0) {
+        timeText.innerHTML+=" UTC+"+tz;
+    } else {
+        tz *= -1;
+        timeText.innerHTML+=" UTC-"+tz;
+    }
 }
