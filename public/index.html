@@ -78,6 +78,37 @@
     <script src="js/q.min.js"></script>
     <script src="js/three.min.js"></script>
 
+
+
+    <script type="x-shader/x-vertex" id="vertexshader">
+
+        attribute float temperature;
+        varying float vTemperature;
+
+        void main() {
+            vTemperature = temperature;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+        }
+
+    </script>
+
+    <script type="x-shader/x-fragment" id="fragmentshader">
+
+        varying float vTemperature;
+        uniform vec3 startColor;
+        uniform vec3 endColor;
+        uniform float minTemperature;
+        uniform float maxTemperature;
+
+        void main() {
+            vec3 mixed = mix(startColor, endColor, (vTemperature - minTemperature) / (maxTemperature - minTemperature) * 3.0 );
+            gl_FragColor = vec4(mixed, 1.0);
+        }
+
+    </script>
+
+
+
     <script>
 
       var loadingText = document.getElementById("loading-text");
@@ -144,38 +175,6 @@
       ga('send', 'pageview');
     </script>
 
-
-
-
-
-
-
-    <script type="x-shader/x-vertex" id="vertexshader">
-
-        attribute float temperature;
-        varying float vTemperature;
-
-        void main() {
-            vTemperature = temperature;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
-        }
-
-    </script>
-
-    <script type="x-shader/x-fragment" id="fragmentshader">
-
-        varying float vTemperature;
-        uniform vec3 startColor;
-        uniform vec3 endColor;
-        uniform float minTemperature;
-        uniform float maxTemperature;
-
-        void main() {
-            vec3 mixed = mix(startColor, endColor, (vTemperature - minTemperature) / (maxTemperature - minTemperature) * 1.0 );
-            gl_FragColor = vec4(mixed, 1.0);
-        }
-
-    </script>
 
 
 

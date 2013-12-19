@@ -2,6 +2,37 @@
 'use strict';
 
 
+var Dispatcher = new function() {
+
+    var events = {};
+
+    this.on = function(e, fn) {
+        if (!events[e]) {
+            events[e] = [];
+        }
+        if (events[e].indexOf(fn) === -1) {
+            events[e].push(fn);
+        }
+    };
+    this.off = function(e, fn) {
+        if (!events[e]) {
+            events[e] = [];
+        }
+        if (events.indexOf(fn) !== -1) {
+            events.splice(events.indexOf(fn), 1);
+        }
+    };
+    this.trigger = function(e) {
+        if (!events[e]) {
+            events[e] = [];
+        }
+        var args = Array.prototype.slice.call(arguments, 1);
+        events[e].forEach(function(fn) {
+            fn.apply(null, args);
+        });
+    };
+
+}();
 
 var now = Date.now(),
         timeDiff,
@@ -207,9 +238,20 @@ function move() {
                     canvasBuckets[i].height = canvasDim.height;
                     canvasBuckets[i].style.webkitTransform = 'translate(' + canvasOffset.x + 'px,' + canvasOffset.y + 'px)';
                 }
-                canvasOffset = {x: 0, y: 0};
+                buffer.width = canvasDim.width;
+                buffer.height = canvasDim.height;
+
+                var webglCanvas = document.querySelector('canvas.is-heatmap');
+                if (webglCanvas) {
+                    webglCanvas.width = canvasDim.width;
+                    webglCanvas.height = canvasDim.height;
+                    webglCanvas.style.webkitTransform = 'translate(' + canvasOffset.x + 'px,' + canvasOffset.y + 'px)';
+                }
+                // canvasOffset = {x: 0, y: 0};
 
         }
+
+        Dispatcher.trigger('move');
 
 }
 
@@ -246,8 +288,8 @@ function resizeCanvas() {
     heatCanvas.height = document.querySelector('.container').clientHeight;
     svg.attr("width", buffer.width);
     svg.attr("height", buffer.height);
-    width = buffer.width;
-    height = buffer.height;
+    // width = buffer.width;
+    // height = buffer.height;
 
 }
 window.addEventListener('resize', resizeCanvas);
@@ -273,22 +315,21 @@ function Particle(x, y) {
     this.reset(Math.floor(now + Math.random() * options.lifeTime));
 }
 Particle.prototype.reset = function (lifeTime) {
-    this.x = canvasOffset.x + Math.floor(Math.random() * canvasDim.width);
-    this.y = canvasOffset.y + Math.floor(Math.random() * canvasDim.height);
+    this.x = Math.floor(Math.random() * canvasDim.width);
+    this.y = Math.floor(Math.random() * canvasDim.height);
     this.refreshCoords();
     this.lifeTime = lifeTime || now + options.lifeTime;
 };
-Particle.prototype.refreshCoords = function () {
-    var coords = getDataCoords(this.x, this.y);
-    this.dataCoordX = coords[0];
-    this.dataCoordY = coords[1];
-};
 Particle.prototype.tick = function () {
-    if (this.x > canvasOffset.x + canvasDim.width || this.x < canvasOffset.x ||
-        this.y > canvasOffset.y + canvasDim.height || this.y < canvasOffset.y ||
+    if (this.x > canvasDim.width || this.x < 0 ||
+        this.y > canvasDim.height || this.y < 0 ||
         this.lifeTime < now) {
         this.reset();
     }
+};
+Particle.prototype.refreshCoords = function () {
+    this.dataCoordX = Math.floor(this.x / canvasDim.width * data.nx);
+    this.dataCoordY = data.ny - Math.floor(this.y / canvasDim.height * data.ny) - 1;
 };
 Particle.prototype.nextPositionX = function () {
     this.x = this.x + data.wind10m_u[this.dataCoordY*data.nx+this.dataCoordX] * timeDiff * options.speedFactor * s;
@@ -356,8 +397,8 @@ function render() {
     bufferCtx.globalAlpha = options.globalAlpha;
 
     for (var j = 0; j < currentParticles; j++) {
-       particles[j].refreshCoords();
        particles[j].tick();
+       particles[j].refreshCoords();
     }
 
     for (var i = 0; i < canvasBuckets.length; i++) {
@@ -391,10 +432,10 @@ function render() {
      */
      var fps = fpsCounter(1000 / (timeDiff * 16));
 
-     ctxBuckets[0].clearRect(0, 0, 100, height);
+     ctxBuckets[0].clearRect(0, 0, 100, canvasDim.height);
      ctxBuckets[0].fillStyle = '#ffffff';
-     ctxBuckets[0].fillText(fps, 0, height);
-     ctxBuckets[0].fillText(currentParticles, 30, height);
+     ctxBuckets[0].fillText(fps, 0, canvasDim.height);
+     ctxBuckets[0].fillText(currentParticles, 30, canvasDim.height);
 
      if (fps > options.minFPS) {
         currentParticles = Math.min(currentParticles + 100, options.maxParticles);
@@ -489,8 +530,6 @@ function data_is_ready() {
 
     dataLoaded = true;
 
-    move();
-
 
 
     // Temperature canvas
@@ -509,6 +548,10 @@ function data_is_ready() {
     document.querySelector('.container').appendChild(tempCanvas);
     heatCanvas.classList.add('heat');
     heatCtx = buffer.getContext('2d');
+
+
+
+    move();
 
     // heatCtx.fillStyle = "#ffffff";
     // heatCtx.fillRect(0, 0, 1000, 1000);
@@ -571,6 +614,8 @@ function data_is_ready() {
 
     runWebGL();
 
+    move();
+
 }
 
 
@@ -610,8 +655,6 @@ function runWebGL() {
         maxTemperature: { type: 'f', value: boundsMax }
     };
 
-    console.log(attributes);
-
     // create the sphere's material
     var shaderMaterial = new THREE.ShaderMaterial({
         uniforms:       uniforms,
@@ -620,8 +663,6 @@ function runWebGL() {
         fragmentShader: document.querySelector('#fragmentshader').innerHTML
     });
 
-    console.log(uniforms);
-
     // set up the sphere vars
     var radius = 50, segments = 16, rings = 16;
 
@@ -629,38 +670,40 @@ function runWebGL() {
     // we will cover the sphereMaterial next!
 
     // // My geometry
-    var geometry = new THREE.Geometry();
+    // var geometry = new THREE.Geometry();
 
-    for ( var i = 0; i < 100; i++ ) {
+    // for ( var i = 0; i < 100; i++ ) {
 
-        var vertex = new THREE.Vector3();
-        vertex.x = Math.random() * 2 - 1;
-        vertex.y = Math.random() * 2 - 1;
-        vertex.z = Math.random() * 2 - 1;
-        vertex.multiplyScalar( radius );
+    //     var vertex = new THREE.Vector3();
+    //     vertex.x = Math.random() * 2 - 1;
+    //     vertex.y = Math.random() * 2 - 1;
+    //     vertex.z = Math.random() * 2 - 1;
+    //     vertex.multiplyScalar( radius );
 
-        geometry.vertices.push( vertex );
+    //     geometry.vertices.push( vertex );
 
-    }
-        geometry.faces.push(THREE.Face3(0,1,2));
+    // }
+    //     geometry.faces.push(THREE.Face3(0,1,2));
+
 
     var geometry = new THREE.PlaneGeometry(WIDTH, HEIGHT, data.nx - 1, data.ny - 1);
-    console.log(geometry);
+    var plane = new THREE.Mesh(geometry, shaderMaterial);
+    scene.add(plane);
 
-
-    var sphere = new THREE.Mesh(geometry, shaderMaterial);
-    // var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, segments, rings), shaderMaterial);
-
-    // // add the sphere to the scene
-    scene.add(sphere);
+    scene.add(plane);
 
     // // now populate the array of attributes
-    for (var v = 0; v < sphere.geometry.vertices.length; v++) {
+    for (var v = 0; v < plane.geometry.vertices.length; v++) {
         var x = v % data.nx,
             y = Math.floor(v / data.nx);
         attributes.temperature.value[v] = data.temp2m[(data.ny - y) * data.nx + x];
     }
 
+
+    Dispatcher.on('move', function() {
+        // camera.position.x = t[0];
+        // camera.position.y = t[1];
+    });
 
 
 
@@ -676,6 +719,7 @@ function runWebGL() {
     }
     render();
 
+    // move();
 
 }
 

@@ -88,8 +88,8 @@ a {
 	background: #21333B;
 	box-shadow: 0 1px 2px rgba(0,0,0,0.5);
 	width: 280px;
-	top: 85px;
-	left: 15px;
+	top: 15px;
+	right: 15px;
 	padding: 0 15px;
 	color: #fff;
 	min-height: 40px;
@@ -177,6 +177,7 @@ canvas {
 }
 	canvas.is-heatmap {
 		z-index: -1;
+		box-shadow: 0 0 7px rgba(0,0,0,0.5);
 	}
 #map {
     position: absolute;
