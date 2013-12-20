@@ -34,6 +34,8 @@ var Dispatcher = new function() {
 
 }();
 
+
+
 var now = Date.now(),
         timeDiff,
         lastTick = Date.now();
@@ -53,8 +55,8 @@ var options = {
              '255,71,154'
         ],
         criterion: 'temp2m',
-        minParticles: 1500,
-        maxParticles: 10000,
+        minParticles: 1500, // TODO 1500
+        maxParticles: 1500, // TODO 10000
         minFPS: 20
 };
 
@@ -65,20 +67,10 @@ var t, s;
 var mouseBuffer = {x: 0, y: 0};
 
 
+var svg, projection, g, graticulePath;
 
 
-var width = document.querySelector('.container').clientWidth,
-    height = document.querySelector('.container').clientHeight;
 
-var grid_center = {lat: 47.5, lon: 4};
-
-var projection = d3.geo.conicConformal()
-                                .center([47.5, 4])
-                                .scale(width)
-                                .rotate([-grid_center.lon, 0])
-                                .parallels([47.5, 47.5])
-                                .translate([width, height])
-                                .precision(0.1);
 
 // var projection = d3.geo.mercator()
 //     .scale(width)
@@ -94,58 +86,21 @@ var projection = d3.geo.conicConformal()
 
 // var projection = d3.geo.mercator();
 
-var path = d3.geo.path()
-.projection(projection);
-
-var zoom = d3.behavior.zoom()
-        .center([width/2, height/2])
-        .scaleExtent([0, 3])
-        .on("zoom", move);
-
-
-var graticule = d3.geo.graticule()
-        .extent([[-90,0], [90, 90]])
-        .step([5, 5]);
-
-var svg = d3.select("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .append("g")
-             .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
-             .call(zoom);
-var g = svg.append('g');
-
-
-// var center = projection([grid_center.lon, grid_center.lat]),
-//     bottomLeft = projection([-24.6064, 26.3683]),
-//     topRight = projection([4 + (4 + 24.6064), (47.5 + (47.5 - 26.3683))]); // 48, 60
-
-
-var countries = g.append('g').attr('class', 'countries');
-
-var graticulePath = g.append("path")
-        .datum(graticule)
-        .attr("class", "graticule")
-        .attr("d", path);
-
-var cursor = g.append('circle')
-        .attr('cx', 0)
-        .attr('cy', 0)
-        .attr('r', 5)
-        .attr('class', 'cursor');
 
 
 
 
-var container = document.querySelector('.container'),
-        canvasBuckets = [],
-        ctxBuckets = [],
-        buffer,
-        bufferCtx,
-        tempCanvas,
-        tempCtx,
-        heatCanvas,
-        heatCtx;
+var elMain = document.querySelector('.main'),
+    elContainer = document.querySelector('.container');
+
+var canvasBuckets = [],
+    ctxBuckets = [],
+    buffer,
+    bufferCtx,
+    tempCanvas,
+    tempCtx,
+    heatCanvas,
+    heatCtx;
 
 
 var dataLoaded = false;
@@ -168,24 +123,11 @@ var dataParams = ['lat', 'lon', 'wind10m_u', 'wind10m_v', 'temp2m', 'press', 'ra
 
 var projTopLeft, projBottomRight;
 var gridSize;
-var corners;
 
 
 var canvasDim, canvasOffset;
 //move();
 
-
-
-d3.json('data/world-50m.json', function(error, world) {
-
-        countries.selectAll('path')
-             .data(topojson.feature(world, world.objects.countries).features)
-             .enter().append('path')
-                        // .attr('class', 'country')
-                        .attr('class', function(d,i) { return 'country countr-' + d.id; })
-                        .attr('d', path);
-
-});
 
 
 
@@ -225,27 +167,32 @@ function move() {
 
         if (dataLoaded) {
 
+                // canvasDim = {
+                //      width: (projBottomRight[0] - projTopLeft[0]) * s,
+                //      height: -(projTopLeft[1] - projBottomRight[1]) * s
+                // };
                 canvasDim = {
-                     width: (projBottomRight[0] - projTopLeft[0]) * s,
-                     height: -(projTopLeft[1] - projBottomRight[1]) * s
+                     width: elContainer.clientWidth,
+                     height: elContainer.clientHeight
                 };
+
                 canvasOffset = {
-                     x: width / 2 + projTopLeft[0] * s + t[0],
-                     y: height / 2 + projTopLeft[1] * s + t[1]
+                     x: elContainer.clientWidth / 2 + projTopLeft[0] * s + t[0],
+                     y: elContainer.clientHeight / 2 + projTopLeft[1] * s + t[1]
                 };
                 for (var i = 0; i < canvasBuckets.length; i++) {
-                    canvasBuckets[i].width = canvasDim.width;
-                    canvasBuckets[i].height = canvasDim.height;
-                    canvasBuckets[i].style.webkitTransform = 'translate(' + canvasOffset.x + 'px,' + canvasOffset.y + 'px)';
+                    // canvasBuckets[i].width = canvasDim.width;
+                    // canvasBuckets[i].height = canvasDim.height;
+                    // canvasBuckets[i].style.webkitTransform = 'translate(' + canvasOffset.x + 'px,' + canvasOffset.y + 'px)';
                 }
-                buffer.width = canvasDim.width;
-                buffer.height = canvasDim.height;
+                // buffer.width = canvasDim.width;
+                // buffer.height = canvasDim.height;
 
                 var webglCanvas = document.querySelector('canvas.is-heatmap');
                 if (webglCanvas) {
-                    webglCanvas.width = canvasDim.width;
-                    webglCanvas.height = canvasDim.height;
-                    webglCanvas.style.webkitTransform = 'translate(' + canvasOffset.x + 'px,' + canvasOffset.y + 'px)';
+                    // webglCanvas.width = canvasDim.width;
+                    // webglCanvas.height = canvasDim.height;
+                    // webglCanvas.style.webkitTransform = 'translate(' + canvasOffset.x + 'px,' + canvasOffset.y + 'px)';
                 }
                 // canvasOffset = {x: 0, y: 0};
 
@@ -254,45 +201,6 @@ function move() {
         Dispatcher.trigger('move');
 
 }
-
-
-
-function resizeCanvas() {
-
-    var windowAspectRatio = window.innerWidth / window.innerHeight,
-        containerAspectRatio = container.clientWidth / container.clientHeight;
-
-    if (windowAspectRatio > containerAspectRatio) {
-        container.style.width = (window.innerHeight * containerAspectRatio) + 'px';
-        container.style.height = window.innerHeight + 'px';
-    } else {
-        container.style.width = window.innerWidth + 'px';
-        container.style.height = (window.innerWidth / containerAspectRatio) + 'px';
-    }
-
-    // TODO..........
-    container.style.width = width + 'px';
-    container.style.height = height + 'px';
-
-
-    for (var i = 0; i < canvasBuckets.length; i++) {
-        canvasBuckets[i].width = document.querySelector('.container').clientWidth;
-        canvasBuckets[i].height = document.querySelector('.container').clientHeight;
-    }
-
-    buffer.width = document.querySelector('.container').clientWidth;
-    buffer.height = document.querySelector('.container').clientHeight;
-    tempCanvas.width = document.querySelector('.container').clientWidth;
-    tempCanvas.height = document.querySelector('.container').clientHeight;
-    heatCanvas.width = document.querySelector('.container').clientWidth;
-    heatCanvas.height = document.querySelector('.container').clientHeight;
-    svg.attr("width", buffer.width);
-    svg.attr("height", buffer.height);
-    // width = buffer.width;
-    // height = buffer.height;
-
-}
-window.addEventListener('resize', resizeCanvas);
 
 
 
@@ -392,7 +300,7 @@ function render() {
     timeDiff = (Date.now() - lastTick) / 16; // timeDiff should be near 1 at 60fps
     lastTick = now;
 
-    requestAnimationFrame(render);
+    // requestAnimationFrame(render);
 
     bufferCtx.globalAlpha = options.globalAlpha;
 
@@ -432,10 +340,10 @@ function render() {
      */
      var fps = fpsCounter(1000 / (timeDiff * 16));
 
-     ctxBuckets[0].clearRect(0, 0, 100, canvasDim.height);
+     ctxBuckets[0].clearRect(0, 0, 100, elContainer.clientHeight);
      ctxBuckets[0].fillStyle = '#ffffff';
-     ctxBuckets[0].fillText(fps, 0, canvasDim.height);
-     ctxBuckets[0].fillText(currentParticles, 30, canvasDim.height);
+     ctxBuckets[0].fillText(fps, 0, elContainer.clientHeight);
+     ctxBuckets[0].fillText(currentParticles, 30, elContainer.clientHeight);
 
      if (fps > options.minFPS) {
         currentParticles = Math.min(currentParticles + 100, options.maxParticles);
@@ -456,52 +364,204 @@ document.querySelectorAll('.header_nav a').forEach(function(el) {
 
 
 
-function loadDataImage(param) {
 
-    var deferred = Q.defer(),
-        loadCanvas = document.createElement('canvas'),
-        loadCtx = loadCanvas.getContext('2d'),
-        img = new Image();
+Q(function() {
 
-    loadCanvas.width = data.nx;
-    loadCanvas.height = data.ny;
+    return true;
 
-    img.onload = function() {
+}).then(function() {
 
-        loadCtx.drawImage(img, 0, 0);
+    /**
+     * Load all images
+     */
 
-        var imageData = loadCtx.getImageData(0,0, loadCanvas.width, loadCanvas.height);
-        data[param] = new Float32Array(imageData.data.buffer);
+    function loadDataImage(param) {
 
-        img = null;
+        var deferred = Q.defer(),
+            loadCanvas = document.createElement('canvas'),
+            loadCtx = loadCanvas.getContext('2d'),
+            img = new Image();
+
+        loadCanvas.width = data.nx;
+        loadCanvas.height = data.ny;
+
+        img.onload = function() {
+
+            loadCtx.drawImage(img, 0, 0);
+
+            var imageData = loadCtx.getImageData(0,0, loadCanvas.width, loadCanvas.height);
+            data[param] = new Float32Array(imageData.data.buffer);
+
+            img = null;
+
+            deferred.resolve();
+
+        };
+
+        img.src = 'data/data-' + param + '.png';
+
+        return deferred.promise;
+
+    }
+
+    return Q.all(dataParams.map(function(param) {
+        return loadDataImage(param);
+    }));
+
+}).then(function afterDataLoaded() {
+
+    var deferred = Q.defer();
+
+    /**
+     * Show D3 map overlay
+     */
+
+    d3.json('data/world-50m.json', function(err, world) {
+
+        if (err) {
+            deferred.reject(err);
+            return;
+        }
+
+
+        var width = elContainer.clientWidth,
+            height = elContainer.clientHeight;
+
+        var grid_center = {lat: 47.5, lon: 4};
+
+        projection = d3.geo.conicConformal()
+            .center([47.5, 4])
+            .scale(width)
+            .rotate([-grid_center.lon, 0])
+            .parallels([47.5, 47.5])
+            .translate([width, height])
+            .precision(0.1);
+
+        var path = d3.geo.path()
+            .projection(projection);
+
+        var zoom = d3.behavior.zoom()
+            .center([width/2, height/2])
+            .scaleExtent([0, 3])
+            .on("zoom", move);
+
+        var graticule = d3.geo.graticule()
+            .extent([[-90,0], [90, 90]])
+            .step([5, 5]);
+
+        svg = d3.select("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+            .call(zoom);
+        g = svg.append('g');
+
+        var countries = g.append('g').attr('class', 'countries');
+
+        graticulePath = g.append("path")
+            .datum(graticule)
+            .attr("class", "graticule")
+            .attr("d", path);
+
+        countries.selectAll('path')
+             .data(topojson.feature(world, world.objects.countries).features)
+             .enter().append('path')
+                        // .attr('class', 'country')
+                        .attr('class', function(d,i) { return 'country countr-' + d.id; })
+                        .attr('d', path);
 
         deferred.resolve();
 
-    };
-
-    img.src = 'data/data-' + param + '.png';
+    });
 
     return deferred.promise;
 
-}
+}).then(function afterWorldLoaded() {
 
-Q.all(dataParams.map(function(param) {
-    return loadDataImage(param);
-})).then(data_is_ready).done();
+    /**
+     * 1. Hide loading
+     */
+
+    document.querySelector('.loading').classList.remove('is-active');
 
 
-function data_is_ready() {
+
+    /**
+     * 2. Setup canvases
+     */
+
+    // Temperature canvas
+    tempCanvas = document.createElement('canvas');
+    tempCtx = tempCanvas.getContext('2d');
+    elContainer.appendChild(tempCanvas);
+
+    // Buffer canvas
+    buffer = document.createElement('canvas');
+    bufferCtx = buffer.getContext('2d');
+
+    // Heatmap canvas
+    heatCanvas = document.createElement('canvas');
+    heatCtx = buffer.getContext('2d');
+    elContainer.appendChild(tempCanvas);
+    heatCanvas.classList.add('heat');
+
+    // Create canvas layers
+    for (var i = 0; i < options.color.length; i++) {
+        canvasBuckets[i] = document.createElement('canvas');
+        elContainer.appendChild(canvasBuckets[i]);
+        ctxBuckets[i] = canvasBuckets[i].getContext('2d');
+    }
 
 
-    loadingPopup.style.display='none';
+
+    /**
+     * 3. Resize container
+     */
+
+    function resizeContainer() {
+
+        var mainAspectRatio = elMain.clientWidth / elMain.clientHeight,
+            containerAspectRatio = data.nx / data.ny;
+
+        if (mainAspectRatio > containerAspectRatio) {
+            elContainer.style.width = (elMain.clientHeight * containerAspectRatio) + 'px';
+            elContainer.style.height = elMain.clientHeight + 'px';
+        } else {
+            elContainer.style.width = elMain.clientWidth + 'px';
+            elContainer.style.height = (elMain.clientWidth / containerAspectRatio) + 'px';
+        }
+
+        for (var i = 0; i < canvasBuckets.length; i++) {
+            canvasBuckets[i].width = elContainer.clientWidth;
+            canvasBuckets[i].height = elContainer.clientHeight;
+        }
+        buffer.width  = tempCanvas.width  = heatCanvas.width  = elContainer.clientWidth;
+        buffer.height = tempCanvas.height = heatCanvas.height = elContainer.clientHeight;
+
+        if (svg) {
+            svg.attr('width', elContainer.clientWidth);
+            svg.attr('height', elContainer.clientHeight);
+        }
+
+    }
+    resizeContainer();
+    window.addEventListener('resize', resizeContainer);
+
+
+
 
     /** Data
-        *    ^
-        *  y |
-        *    0 —->
-        *      x
-        */
-    corners = {
+     *
+     *    ^
+     *  y |
+     *    0 —->
+     *      x
+     *
+     *  In 1-dimensional array from topleft
+     */
+
+    var corners = {
         topLeft: [data.lon[data.nx*(data.ny-1)], data.lat[data.nx*(data.ny-1)]],
         topRight: [data.lon[data.ny*data.nx-1], data.lat[data.ny*data.nx-1]],
         bottomLeft: [data.lon[0], data.lat[0]],
@@ -517,6 +577,7 @@ function data_is_ready() {
     /**
      * Draw control dataframe
      */
+
     g.append('polyline')
             .attr('class', 'dataframe')
             .attr('points', [
@@ -532,40 +593,15 @@ function data_is_ready() {
 
 
 
-    // Temperature canvas
-    tempCanvas = document.createElement('canvas');
-    document.querySelector('.container').appendChild(tempCanvas);
-    tempCtx = tempCanvas.getContext('2d');
 
-
-    // Buffer canvas
-    buffer = document.createElement('canvas');
-    bufferCtx = buffer.getContext('2d');
-
-
-    // Heatmap canvas
-    heatCanvas = document.createElement('canvas');
-    document.querySelector('.container').appendChild(tempCanvas);
-    heatCanvas.classList.add('heat');
-    heatCtx = buffer.getContext('2d');
 
 
 
     move();
 
-    // heatCtx.fillStyle = "#ffffff";
-    // heatCtx.fillRect(0, 0, 1000, 1000);
 
 
-    // Create canvas layers
-    for (var i = 0; i < options.color.length; i++) {
-        canvasBuckets[i] = document.createElement('canvas');
-        document.querySelector('.container').appendChild(canvasBuckets[i]);
-        ctxBuckets[i] = canvasBuckets[i].getContext('2d');
-    }
 
-    // Resize canvas
-    resizeCanvas();
 
     // Set which paramter will be colored
     setupBounds();
@@ -588,8 +624,6 @@ function data_is_ready() {
 
         var coords = getDataCoords(e.pageX, e.pageY),
             proj = projection([data.lon[coords[1]*data.nx+coords[0]], data.lat[coords[1]*data.nx+coords[0]]]);
-
-        cursor.attr('transform', 'translate(' + proj + ')');
 
         dataParams.forEach(function(value) {
             if (document.querySelector('.data_' + value)) {
@@ -616,7 +650,20 @@ function data_is_ready() {
 
     move();
 
-}
+
+
+}).then(function canvasReady() {
+
+    /**
+     * Show whole container
+     */
+
+    elContainer.classList.add('is-active');
+
+
+}).done();
+
+
 
 
 function runWebGL() {
@@ -649,8 +696,9 @@ function runWebGL() {
     };
 
     var uniforms = {
-        startColor: { type: 'c', value: new THREE.Color(0x09202a) },
+        startColor: { type: 'c', value: new THREE.Color(0x124156) },
         endColor: { type: 'c', value: new THREE.Color(0x1e0829) },
+        // endColor: { type: 'c', value: new THREE.Color(0x1e0829) },
         minTemperature: { type: 'f', value: boundsMin },
         maxTemperature: { type: 'f', value: boundsMax }
     };

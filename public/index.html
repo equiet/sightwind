@@ -20,7 +20,7 @@
         </ul>
     </header>
 
-    <div class="content">
+    <div class="main">
 
         <div class="loading" id="loading-popup">
             <h3>
@@ -32,11 +32,6 @@
         <div class="container">
             <svg></svg>
         </div>
-
-        <footer class="footer">
-            Forecast for <span id="time-text"></span><br>
-            Open Data from the <a href="http://openmeteofoundation.org/">Open Meteo Foundation</a>
-        </footer>
 
         <div class="detail">
             <h2 class="detail_coordinates">
@@ -75,6 +70,25 @@
 
     </div>
 
+
+    <footer class="footer">
+
+        <ul class="timeline">
+
+            <script>
+                for (var i = 0; i < 73; i++) {
+                    document.write('<li><span>' + i % 24 + ':00</span></li>');
+                }
+            </script>
+
+        </ul>
+
+    </footer>
+
+    Forecast for <span id="time-text"></span><br>
+    Open Data from the <a href="http://openmeteofoundation.org/">Open Meteo Foundation</a>
+
+
     <script src="js/q.min.js"></script>
     <script src="js/three.min.js"></script>
 
@@ -101,7 +115,7 @@
         uniform float maxTemperature;
 
         void main() {
-            vec3 mixed = mix(startColor, endColor, (vTemperature - minTemperature) / (maxTemperature - minTemperature) * 3.0 );
+            vec3 mixed = mix(startColor, endColor, (vTemperature - minTemperature) / (maxTemperature - minTemperature) );
             gl_FragColor = vec4(mixed, 1.0);
         }
 
