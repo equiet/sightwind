@@ -56,7 +56,7 @@ var options = {
         ],
         criterion: 'temp2m',
         minParticles: 1500, // TODO 1500
-        maxParticles: 3000, // TODO 10000
+        maxParticles: 5000, // TODO 10000
         minFPS: 20
 };
 
@@ -367,11 +367,64 @@ function loadData(frame) {
     })).then(function() {
 
         data = tmpData;
+        setupBounds('temp2m');
+        dataLoaded = true;
+
+        document.querySelectorAll('.timeline li').forEach(function(el) {
+            el.classList.remove('is-active');
+        });
+        document.querySelector('.timeline li[data-frame="' + frame + '"]').classList.add('is-active');
 
     });
 
 }
 
+
+d3.csv('data/frames.csv', function(err, rows) {
+
+    var interval;
+
+    NodeList.prototype.forEach = Array.prototype.forEach;
+
+    var elFooter = document.querySelector('.footer');
+    elFooter.innerHTML =
+        '<ul class="timeline">' +
+            rows.map(function(row) {
+                var date = new Date(parseInt(row.time, 10) * 1000);
+                if (date.getHours() % 24 === 0) {
+                    return '<li data-frame="' + row.frame + '" data-time="' + row.time + '" class="is-midnight">' +
+                        '<span>' + date.toDateString().slice(4, 10) + '</span>' +
+                        '</li>';
+                } else {
+                    return '<li data-frame="' + row.frame + '" data-time="' + row.time + '">' +
+                        '<span>' + date.getHours() % 24 + ':00</span>' +
+                        '</li>';
+                }
+            }).join('') +
+        '</ul>';
+
+    elFooter.querySelectorAll('li').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            loadData(parseInt(el.dataset.frame, 10));
+            clearInterval(interval);
+        });
+    });
+
+
+    loadData(0).then(function() {
+
+        runWebGL();
+
+        var frame = 0;
+        interval = setInterval(function() {
+            loadData(++frame % 72);
+        }, 1000);
+
+        elContainer.classList.add('is-active');
+
+    });
+
+});
 
 
 
@@ -572,35 +625,8 @@ Q(function() {
 
 
 
-    loadData(0).then(function() {
-        setupBounds('temp2m');
-        runWebGL();
-        dataLoaded = true;
-    });
 
 
-
-    NodeList.prototype.forEach = Array.prototype.forEach;
-    document.querySelectorAll('.timeline li').forEach(function(el) {
-
-        el.addEventListener('click', function(e) {
-
-            loadData(parseInt(el.dataset.frame, 10)).then(function() {
-
-                setupBounds('temp2m');
-                // runWebGL();
-                dataLoaded = true;
-
-            });
-
-
-        });
-
-    });
-
-
-
-    // Set which paramter will be colored
 
 
 
@@ -647,16 +673,6 @@ Q(function() {
         document.querySelector('.data_wind10m_dir').innerHTML = dir;
 
     });
-
-
-
-}).then(function canvasReady() {
-
-    /**
-     * Show whole container
-     */
-
-    elContainer.classList.add('is-active');
 
 
 }).done();
@@ -711,25 +727,6 @@ function runWebGL() {
 
     // set up the sphere vars
     var radius = 50, segments = 16, rings = 16;
-
-    // create a new mesh with sphere geometry -
-    // we will cover the sphereMaterial next!
-
-    // // My geometry
-    // var geometry = new THREE.Geometry();
-
-    // for ( var i = 0; i < 100; i++ ) {
-
-    //     var vertex = new THREE.Vector3();
-    //     vertex.x = Math.random() * 2 - 1;
-    //     vertex.y = Math.random() * 2 - 1;
-    //     vertex.z = Math.random() * 2 - 1;
-    //     vertex.multiplyScalar( radius );
-
-    //     geometry.vertices.push( vertex );
-
-    // }
-    //     geometry.faces.push(THREE.Face3(0,1,2));
 
 
     var geometry = new THREE.PlaneGeometry(WIDTH, HEIGHT, DATA_WIDTH - 1, DATA_HEIGHT - 1);
