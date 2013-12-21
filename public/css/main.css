@@ -191,7 +191,7 @@ a {
 	z-index: 40;
 	border-radius: 3px;
 	opacity: 0;
-	-webkit-transition: opacity 0.3s;
+	-webkit-transition: opacity 0.7s;
 }
 	.details.is-active {
 		opacity: 1;
