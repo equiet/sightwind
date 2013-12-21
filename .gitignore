@@ -1,5 +1,4 @@
-public/data/data-*
-public/data/last.js
+public/data/*
 data.nc
 data_tmp.nc
 *.kate-swp
