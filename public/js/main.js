@@ -219,6 +219,10 @@ function setupBounds(criterion) {
         boundsMax = Math.max(boundsMax, val);
     }
 
+    // TODO find global min, max
+    boundsMin = -10;
+    boundsMax = 25;
+
     // Find temp bounds
     var step = (boundsMax - boundsMin) / options.color.length;
     bounds = [];
@@ -654,7 +658,7 @@ Q(function() {
             e.pageX - offset.left - elContainer.clientWidth / 2 - t[0],
             e.pageY - offset.top - elContainer.clientHeight / 2 - t[1]
         ]);
-        var coords = getDataCoords(proj[0], proj[1]);
+        var coords = getDataCoords(e.pageX - offset.left, e.pageY - offset.top);
 
         dataParams.forEach(function(value) {
             if (document.querySelector('.data_' + value)) {
@@ -667,10 +671,10 @@ Q(function() {
         var u = data['wind10m_u'][coords[1]*DATA_WIDTH+coords[0]],
             v = data['wind10m_v'][coords[1]*DATA_WIDTH+coords[0]],
             speed = Math.round(Math.sqrt(u*u+v*v)*36)/10,
-            dir = Math.round(((360-Math.atan2(v,u)/Math.PI*180-90)%360)*10)/10;
+            dir = Math.round(360 - Math.atan2(v,u) / Math.PI * 180 - 90);
 
         document.querySelector('.data_wind10m_speed').innerHTML = speed;
-        document.querySelector('.data_wind10m_dir').innerHTML = dir;
+        document.querySelector('.data_wind10m_dir').style.webkitTransform = 'rotate(' + dir + 'deg)';
 
     });
 

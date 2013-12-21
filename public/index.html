@@ -30,42 +30,28 @@
         </div>
 
         <div class="container">
-            <svg></svg>
-        </div>
 
-        <div class="detail">
-            <h2 class="detail_coordinates">
-                Lat: <span class="data_lat"></span>,
-                Lon: <span class="data_lon"></span>
-            </h2>
-            <!-- <a href="#" class="detail_close">&#x00D7;</a> -->
-            <hr class="detail_separator">
-            <table class="detail_data">
-                <tr>
-                    <th>Wind speed <span class="unit">(km/h, 10m above ground)</span></th>
-                    <td><span class="data_wind10m_speed"></span></td>
-                </tr>
-                <tr>
-                    <th>Wind direction <span class="unit">(degrees from North)</span></th>
-                    <td><span class="data_wind10m_dir"></span></td>
-                </tr>
-                <tr>
-                    <th>Temperature <span class="unit">(°C)</span></th>
-                    <td><span class="data_temp2m"></span></td>
-                </tr>
-                <tr>
-                    <th>Rain <span class="unit">(mm/h)</span></th>
-                    <td><span class="data_rain"></span></td>
-                </tr>
-                <tr>
-                    <th>Altitude <span class="unit">(m)</span></th>
-                    <td><span class="data_topo"></span></td>
-                </tr>
-                <tr>
-                    <th>Pressure <span class="unit">(hPa)</span></th>
-                    <td><span class="data_press"></span></td>
-                </tr>
-            </table>
+            <svg></svg>
+
+            <ul class="details">
+                <li class="details_item">
+                    <span class="data_lat"></span>
+                </li>
+                <li class="details_item">
+                    <span class="data_lon"></span>
+                </li>
+                <li class="details_item is-wind">
+                    <span class="data_wind10m_dir">&darr;</span>
+                    &nbsp;
+                    <span class="data_wind10m_speed"></span>
+                    km/h
+                </li>
+                <li class="details_item is-temperature">
+                    <span class="data_temp2m"></span>
+                    °C
+                </li>
+            </ul>
+
         </div>
 
     </div>
