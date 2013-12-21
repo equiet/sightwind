@@ -645,7 +645,8 @@ Q(function() {
 
     // Mouse event
     var container = document.querySelector('.container'),
-        header = document.querySelector('.header');
+        header = document.querySelector('.header'),
+        elDetails = document.querySelector('.details');
 
     container.addEventListener('mousemove', function(e) {
 
@@ -676,6 +677,13 @@ Q(function() {
         document.querySelector('.data_wind10m_speed').innerHTML = speed;
         document.querySelector('.data_wind10m_dir').style.webkitTransform = 'rotate(' + dir + 'deg)';
 
+    });
+
+    container.addEventListener('mouseover', function(e) {
+        elDetails.classList.add('is-active');
+    });
+    container.addEventListener('mouseout', function(e) {
+        elDetails.classList.remove('is-active');
     });
 
 

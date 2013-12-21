@@ -190,7 +190,7 @@ a {
 	color: #fff;
 	z-index: 40;
 	border-radius: 3px;
-	opacity: 1;
+	opacity: 0;
 	-webkit-transition: opacity 0.3s;
 }
 	.details.is-active {
@@ -199,7 +199,7 @@ a {
 .details_item {
 	display: inline-block;
 	font-size: 16px;
-	padding: 15px;
+	padding: 10px 5px;
 	width: 45px;
 	text-align: right;
 }
