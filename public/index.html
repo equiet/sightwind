@@ -12,12 +12,12 @@
 
     <header class="header">
         <h1 class="header_logo">SightWind</h1>
-        <ul class="header_nav">
+        <!-- <ul class="header_nav">
             <li><a href="#" data-criterion="temp2m" class="is-temperature">Temperature</a></li>
             <li><a href="#" data-criterion="topo" class="is-topo">Topology</a></li>
             <li><a href="#" data-criterion="rain" class="is-rain">Rain</a></li>
             <li><a href="#" data-criterion="press" class="is-pressure">Pressure</a></li>
-        </ul>
+        </ul> -->
     </header>
 
     <div class="main">
@@ -77,7 +77,7 @@
 
             <script>
                 for (var i = 0; i < 73; i++) {
-                    document.write('<li><span>' + i % 24 + ':00</span></li>');
+                    document.write('<li data-frame="' + i + '"><span>' + i % 24 + ':00</span></li>');
                 }
             </script>
 
@@ -85,9 +85,10 @@
 
     </footer>
 
-    Forecast for <span id="time-text"></span><br>
-    Open Data from the <a href="http://openmeteofoundation.org/">Open Meteo Foundation</a>
-
+    <div class="info">
+        Forecast for <span id="time-text"></span><br>
+        Open Data from the <a href="http://openmeteofoundation.org/">Open Meteo Foundation</a>
+    </div>
 
     <script src="js/q.min.js"></script>
     <script src="js/three.min.js"></script>
@@ -134,7 +135,7 @@
         loadingPopup.innerHTML+="<p>Please try with a modern browser such as Mozilla Firefox or Google Chrome.</p>";
       }
 
-      var scripts_to_load=["js/d3.js", "js/topojson.v1.js", "js/main.js", "data/last.js"];
+      var scripts_to_load=["js/d3.js", "js/topojson.v1.js", "js/main.js"];
 
       function load_script() {
     var scriptname=scripts_to_load.shift();

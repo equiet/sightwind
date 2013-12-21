@@ -41,7 +41,7 @@ var now = Date.now(),
         lastTick = Date.now();
 
 var options = {
-        speedFactor: 0.05,
+        speedFactor: 0.03,
         lifeTime: 1000,
         lineWidth: 1,
         colorAlpha: 0.6,
@@ -56,7 +56,7 @@ var options = {
         ],
         criterion: 'temp2m',
         minParticles: 1500, // TODO 1500
-        maxParticles: 1500, // TODO 10000
+        maxParticles: 3000, // TODO 10000
         minFPS: 20
 };
 
@@ -64,7 +64,6 @@ var currentParticles = options.minParticles;
 
 
 var t, s;
-var mouseBuffer = {x: 0, y: 0};
 
 
 var svg, projection, g, graticulePath;
@@ -80,6 +79,7 @@ var svg, projection, g, graticulePath;
 //     .precision(.1);
 
 
+var dataLoaded = false;
 
 
 
@@ -102,32 +102,26 @@ var canvasBuckets = [],
     heatCanvas,
     heatCtx;
 
+var DATA_WIDTH = 495,
+    DATA_HEIGHT = 309;
 
-var dataLoaded = false;
-
-var data = {
-    nx: 495,
-    ny: 309,
-    lat: false,
-    lon: false,
-    wind10m_u: false,
-    wind10m_v: false,
-    temp2m: false,
-    press: false,
-    rain: false,
-    topo: false
+var DATA_CORNERS = {
+    topLeft: [-45.6597900390625, 55.27363204956055],
+    topRight: [53.409786224365234, 55.27363204956055],
+    bottomLeft: [-24.60595703125, 26.117345809936523],
+    bottomRight: [32.1064453125, 26.117345809936523]
 };
 
-var dataParams = ['lat', 'lon', 'wind10m_u', 'wind10m_v', 'temp2m', 'press', 'rain', 'topo'];
+var data;
+
+var dataParams = ['wind10m_u', 'wind10m_v', 'temp2m'];
 
 
 var projTopLeft, projBottomRight;
 var gridSize;
 
 
-var canvasDim, canvasOffset;
-//move();
-
+var canvasDim;
 
 
 
@@ -143,21 +137,9 @@ function move() {
              s = 1;
         }
 
+        s = 1; // TODO
 
-        // var originalT = [t[0], t[1]];
-        // mouseBuffer.x = originalT[0] - t[0];
-        // mouseBuffer.y = originalT[1] - t[1];
-        // t[0] = clamp(t[0] - mouseBuffer.x, (width - canvasDim.width) / 2, -(width - canvasDim.width) / 2);
-        // t[1] = clamp(t[1] - mouseBuffer.y, (height - canvasDim.height) / 2, -(height - canvasDim.height) / 2);
-        // if (width > canvasDim.width) {
-        //     t[0] = 0;
-        // }
-        // if (height > canvasDim.height) {
-        //     t[1] = 1;
-        // }
-
-
-        g.style("stroke-width", 1 / s).attr("transform", "translate(" + [t[0],t[1]] + ")scale(" + s + ")");
+        g.style("stroke-width", 1 / s).attr("transform", "translate(" + [t[0], t[1]] + ")scale(" + s + ")");
 
         graticulePath.style('stroke-width', 1/s);
 
@@ -165,54 +147,24 @@ function move() {
             ctxBuckets[i].clearRect(0, 0, canvasBuckets[i].width, canvasBuckets[i].height);
         }
 
-        if (dataLoaded) {
-
-                // canvasDim = {
-                //      width: (projBottomRight[0] - projTopLeft[0]) * s,
-                //      height: -(projTopLeft[1] - projBottomRight[1]) * s
-                // };
-                canvasDim = {
-                     width: elContainer.clientWidth,
-                     height: elContainer.clientHeight
-                };
-
-                canvasOffset = {
-                     x: elContainer.clientWidth / 2 + projTopLeft[0] * s + t[0],
-                     y: elContainer.clientHeight / 2 + projTopLeft[1] * s + t[1]
-                };
-                for (var i = 0; i < canvasBuckets.length; i++) {
-                    // canvasBuckets[i].width = canvasDim.width;
-                    // canvasBuckets[i].height = canvasDim.height;
-                    // canvasBuckets[i].style.webkitTransform = 'translate(' + canvasOffset.x + 'px,' + canvasOffset.y + 'px)';
-                }
-                // buffer.width = canvasDim.width;
-                // buffer.height = canvasDim.height;
-
-                var webglCanvas = document.querySelector('canvas.is-heatmap');
-                if (webglCanvas) {
-                    // webglCanvas.width = canvasDim.width;
-                    // webglCanvas.height = canvasDim.height;
-                    // webglCanvas.style.webkitTransform = 'translate(' + canvasOffset.x + 'px,' + canvasOffset.y + 'px)';
-                }
-                // canvasOffset = {x: 0, y: 0};
-
-        }
-
-        Dispatcher.trigger('move');
+        canvasDim = {
+             width: elContainer.clientWidth,
+             height: elContainer.clientHeight
+        };
 
 }
 
 
 
 function clamp(val, min, max) {
-        return Math.min(Math.max(val, min), max);
+    return Math.min(Math.max(val, min), max);
 }
 
 
 function getDataCoords(x, y) {
     return [
-        Math.floor(clamp((x - canvasOffset.x) / canvasDim.width, 0, 1) * data.nx),
-        data.ny - Math.floor(clamp((y - canvasOffset.y) / canvasDim.height, 0, 1) * data.ny) -1,
+        Math.floor(x / canvasDim.width * DATA_WIDTH),
+        Math.floor(y / canvasDim.height * DATA_HEIGHT),
     ];
 }
 
@@ -236,15 +188,15 @@ Particle.prototype.tick = function () {
     }
 };
 Particle.prototype.refreshCoords = function () {
-    this.dataCoordX = Math.floor(this.x / canvasDim.width * data.nx);
-    this.dataCoordY = data.ny - Math.floor(this.y / canvasDim.height * data.ny) - 1;
+    this.dataCoordX = Math.floor(this.x / canvasDim.width * DATA_WIDTH);
+    this.dataCoordY = Math.floor(this.y / canvasDim.height * DATA_HEIGHT);
 };
 Particle.prototype.nextPositionX = function () {
-    this.x = this.x + data.wind10m_u[this.dataCoordY*data.nx+this.dataCoordX] * timeDiff * options.speedFactor * s;
+    this.x = this.x + data.wind10m_u[this.dataCoordY*DATA_WIDTH+this.dataCoordX] * timeDiff * options.speedFactor * s;
     return this.x;
 };
 Particle.prototype.nextPositionY = function () {
-    this.y = this.y - data.wind10m_v[this.dataCoordY*data.nx+this.dataCoordX] * timeDiff * options.speedFactor * s;
+    this.y = this.y - data.wind10m_v[this.dataCoordY*DATA_WIDTH+this.dataCoordX] * timeDiff * options.speedFactor * s;
     return this.y;
 };
 
@@ -258,28 +210,24 @@ var particles = [],
 
 function setupBounds(criterion) {
 
-        if (criterion) {
-            options.criterion = criterion;
-        }
+    // Find min/max
+    boundsMin = Infinity;
+    boundsMax = -Infinity;
+    for (var i = 0; i < data[criterion].length; i++) {
+        var val = data[criterion][i];
+        boundsMin = Math.min(boundsMin, val);
+        boundsMax = Math.max(boundsMax, val);
+    }
 
-        // Find min/max
-        boundsMin = Infinity,
-        boundsMax = -Infinity;
-        for (var i = 0; i < data[options.criterion].length; i++) {
-            var val = data[options.criterion][i];
-            boundsMin = Math.min(boundsMin, val);
-            boundsMax = Math.max(boundsMax, val);
-        }
-
-        // Find temp bounds
-        var step = (boundsMax - boundsMin) / options.color.length;
-        bounds = [];
-        for (var i = 0; i < options.color.length; i++) {
-            bounds.push({
-                 low: boundsMin + step * i,
-                 high: boundsMin + step * (i + 1)
-            });
-        }
+    // Find temp bounds
+    var step = (boundsMax - boundsMin) / options.color.length;
+    bounds = [];
+    for (var i = 0; i < options.color.length; i++) {
+        bounds.push({
+             low: boundsMin + step * i,
+             high: boundsMin + step * (i + 1)
+        });
+    }
 
 }
 
@@ -296,11 +244,16 @@ var fpsCounter = function() {
 
 function render() {
 
+    requestAnimationFrame(render);
+
+    if (!data) {
+        return;
+    }
+
     now = Date.now();
     timeDiff = (Date.now() - lastTick) / 16; // timeDiff should be near 1 at 60fps
     lastTick = now;
 
-    // requestAnimationFrame(render);
 
     bufferCtx.globalAlpha = options.globalAlpha;
 
@@ -322,7 +275,7 @@ function render() {
         ctxBuckets[i].strokeStyle = 'rgba(' + options.color[i] + ',' + options.colorAlpha + ')';
 
         for (var j = 0; j < currentParticles; j++) {
-            var criterion = data[options.criterion][particles[j].dataCoordY*data.nx+particles[j].dataCoordX];
+            var criterion = data[options.criterion][particles[j].dataCoordY*DATA_WIDTH+particles[j].dataCoordX];
             if (bounds[i].low <= criterion && criterion < bounds[i].high) {
                 ctxBuckets[i].moveTo(particles[j].x, particles[j].y);
                 ctxBuckets[i].lineTo(particles[j].nextPositionX(), particles[j].nextPositionY());
@@ -354,25 +307,22 @@ function render() {
 }
 
 
-NodeList.prototype.forEach = Array.prototype.forEach;
-document.querySelectorAll('.header_nav a').forEach(function(el) {
-    el.addEventListener('click', function(e) {
-        e.preventDefault();
-        setupBounds(el.dataset.criterion);
-    });
-});
+// NodeList.prototype.forEach = Array.prototype.forEach;
+// document.querySelectorAll('.header_nav a').forEach(function(el) {
+//     el.addEventListener('click', function(e) {
+//         e.preventDefault();
+//         setupBounds(el.dataset.criterion);
+//     });
+// });
 
 
 
+function loadData(frame) {
 
-Q(function() {
-
-    return true;
-
-}).then(function() {
+    var tmpData = {};
 
     /**
-     * Load all images
+     * Load image
      */
 
     function loadDataImage(param) {
@@ -382,15 +332,15 @@ Q(function() {
             loadCtx = loadCanvas.getContext('2d'),
             img = new Image();
 
-        loadCanvas.width = data.nx;
-        loadCanvas.height = data.ny;
+        loadCanvas.width = DATA_WIDTH;
+        loadCanvas.height = DATA_HEIGHT;
 
         img.onload = function() {
 
             loadCtx.drawImage(img, 0, 0);
 
             var imageData = loadCtx.getImageData(0,0, loadCanvas.width, loadCanvas.height);
-            data[param] = new Float32Array(imageData.data.buffer);
+            tmpData[param] = new Float32Array(imageData.data.buffer);
 
             img = null;
 
@@ -398,17 +348,38 @@ Q(function() {
 
         };
 
-        img.src = 'data/data-' + param + '.png';
+        img.src = 'data/data-' + param + '_' + frame + '.png';
 
         return deferred.promise;
 
     }
 
-    return Q.all(dataParams.map(function(param) {
-        return loadDataImage(param);
-    }));
 
-}).then(function afterDataLoaded() {
+
+    /**
+     * Promise for all images
+     */
+
+    return Q.all(dataParams.map(function(param) {
+
+        return loadDataImage(param);
+
+    })).then(function() {
+
+        data = tmpData;
+
+    });
+
+}
+
+
+
+
+Q(function() {
+
+    return true;
+
+}).then(function loadMap() {
 
     var deferred = Q.defer();
 
@@ -416,11 +387,23 @@ Q(function() {
      * Show D3 map overlay
      */
 
-    d3.json('data/world-50m.json', function(err, world) {
+    d3.json('world-50m.json', function(err, world) {
 
         if (err) {
             deferred.reject(err);
             return;
+        }
+
+
+        var mainAspectRatio = elMain.clientWidth / elMain.clientHeight,
+            containerAspectRatio = DATA_WIDTH / DATA_HEIGHT;
+
+        if (mainAspectRatio > containerAspectRatio) {
+            elContainer.style.width = (elMain.clientHeight * containerAspectRatio) + 'px';
+            elContainer.style.height = elMain.clientHeight + 'px';
+        } else {
+            elContainer.style.width = elMain.clientWidth + 'px';
+            elContainer.style.height = (elMain.clientWidth / containerAspectRatio) + 'px';
         }
 
 
@@ -456,6 +439,42 @@ Q(function() {
             .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
             .call(zoom);
         g = svg.append('g');
+
+
+        /**
+         * Adjust scale
+         */
+
+        projTopLeft = projection(DATA_CORNERS.topLeft);
+        projBottomRight = projection(DATA_CORNERS.bottomRight);
+
+        console.log(projection(DATA_CORNERS.topLeft), [elContainer.clientWidth / 2, elContainer.clientHeight / 2]);
+
+        var upscale = elContainer.clientWidth / (projBottomRight[0] - projTopLeft[0]);
+        projection
+            .scale(width * upscale)
+            .translate([width * upscale, height * upscale]);
+
+        console.log(projection(DATA_CORNERS.topLeft));
+        // TODO get topLeft projection and translate accordingly
+
+
+
+        /**
+         * Draw control dataframe
+         */
+
+        g.append('polyline')
+            .attr('class', 'dataframe')
+            .attr('points', [
+                projection(DATA_CORNERS.topLeft),
+                projection(DATA_CORNERS.topRight),
+                projection(DATA_CORNERS.bottomRight),
+                projection(DATA_CORNERS.bottomLeft),
+                projection(DATA_CORNERS.topLeft)
+            ].map(function (item) { return item.toString(); }).join(' '));
+
+
 
         var countries = g.append('g').attr('class', 'countries');
 
@@ -522,7 +541,7 @@ Q(function() {
     function resizeContainer() {
 
         var mainAspectRatio = elMain.clientWidth / elMain.clientHeight,
-            containerAspectRatio = data.nx / data.ny;
+            containerAspectRatio = DATA_WIDTH / DATA_HEIGHT;
 
         if (mainAspectRatio > containerAspectRatio) {
             elContainer.style.width = (elMain.clientHeight * containerAspectRatio) + 'px';
@@ -539,10 +558,8 @@ Q(function() {
         buffer.width  = tempCanvas.width  = heatCanvas.width  = elContainer.clientWidth;
         buffer.height = tempCanvas.height = heatCanvas.height = elContainer.clientHeight;
 
-        if (svg) {
-            svg.attr('width', elContainer.clientWidth);
-            svg.attr('height', elContainer.clientHeight);
-        }
+        svg.attr('width', elContainer.clientWidth);
+        svg.attr('height', elContainer.clientHeight);
 
     }
     resizeContainer();
@@ -551,60 +568,40 @@ Q(function() {
 
 
 
-    /** Data
-     *
-     *    ^
-     *  y |
-     *    0 —->
-     *      x
-     *
-     *  In 1-dimensional array from topleft
-     */
-
-    var corners = {
-        topLeft: [data.lon[data.nx*(data.ny-1)], data.lat[data.nx*(data.ny-1)]],
-        topRight: [data.lon[data.ny*data.nx-1], data.lat[data.ny*data.nx-1]],
-        bottomLeft: [data.lon[0], data.lat[0]],
-        bottomRight: [data.lon[(data.nx-1)], data.lat[(data.nx-1)]],
-    };
-
-
-    projTopLeft = projection(corners.topLeft);
-    projBottomRight = projection(corners.bottomRight);
-
-
-
-    /**
-     * Draw control dataframe
-     */
-
-    g.append('polyline')
-            .attr('class', 'dataframe')
-            .attr('points', [
-                projection(corners.topLeft),
-                projection(corners.topRight),
-                projection(corners.bottomRight),
-                projection(corners.bottomLeft),
-                projection(corners.topLeft)
-        ].map(function (item) { return item.toString(); }).join(' '));
-
-
-    dataLoaded = true;
-
-
-
-
-
-
-
     move();
 
 
 
+    loadData(0).then(function() {
+        setupBounds('temp2m');
+        runWebGL();
+        dataLoaded = true;
+    });
+
+
+
+    NodeList.prototype.forEach = Array.prototype.forEach;
+    document.querySelectorAll('.timeline li').forEach(function(el) {
+
+        el.addEventListener('click', function(e) {
+
+            loadData(parseInt(el.dataset.frame, 10)).then(function() {
+
+                setupBounds('temp2m');
+                // runWebGL();
+                dataLoaded = true;
+
+            });
+
+
+        });
+
+    });
+
 
 
     // Set which paramter will be colored
-    setupBounds();
+
 
 
     // Create particles
@@ -622,21 +619,27 @@ Q(function() {
 
     container.addEventListener('mousemove', function(e) {
 
-        var coords = getDataCoords(e.pageX, e.pageY),
-            proj = projection([data.lon[coords[1]*data.nx+coords[0]], data.lat[coords[1]*data.nx+coords[0]]]);
+        if (!dataLoaded) {
+            return;
+        }
+
+        var offset = elContainer.getBoundingClientRect();
+        var proj = projection.invert([
+            e.pageX - offset.left - elContainer.clientWidth / 2 - t[0],
+            e.pageY - offset.top - elContainer.clientHeight / 2 - t[1]
+        ]);
+        var coords = getDataCoords(proj[0], proj[1]);
 
         dataParams.forEach(function(value) {
             if (document.querySelector('.data_' + value)) {
-                if (value == 'lat' || value == 'lon') {
-                    document.querySelector('.data_' + value).innerHTML = Math.round(data[value][coords[1]*data.nx+coords[0]]*100)/100;
-                } else {
-                    document.querySelector('.data_' + value).innerHTML = Math.round(data[value][coords[1]*data.nx+coords[0]]*10)/10;
-                }
+                document.querySelector('.data_' + value).innerHTML = Math.round(data[value][coords[1]*DATA_WIDTH+coords[0]]*10)/10;
             }
         });
+        document.querySelector('.data_lat').innerHTML = Math.round(proj[0] * 100) / 100;
+        document.querySelector('.data_lon').innerHTML = Math.round(proj[1] * 100) / 100;
 
-        var u = data['wind10m_u'][coords[1]*data.nx+coords[0]],
-            v = data['wind10m_v'][coords[1]*data.nx+coords[0]],
+        var u = data['wind10m_u'][coords[1]*DATA_WIDTH+coords[0]],
+            v = data['wind10m_v'][coords[1]*DATA_WIDTH+coords[0]],
             speed = Math.round(Math.sqrt(u*u+v*v)*36)/10,
             dir = Math.round(((360-Math.atan2(v,u)/Math.PI*180-90)%360)*10)/10;
 
@@ -644,11 +647,6 @@ Q(function() {
         document.querySelector('.data_wind10m_dir').innerHTML = dir;
 
     });
-
-
-    runWebGL();
-
-    move();
 
 
 
@@ -734,17 +732,14 @@ function runWebGL() {
     //     geometry.faces.push(THREE.Face3(0,1,2));
 
 
-    var geometry = new THREE.PlaneGeometry(WIDTH, HEIGHT, data.nx - 1, data.ny - 1);
+    var geometry = new THREE.PlaneGeometry(WIDTH, HEIGHT, DATA_WIDTH - 1, DATA_HEIGHT - 1);
     var plane = new THREE.Mesh(geometry, shaderMaterial);
     scene.add(plane);
 
-    scene.add(plane);
 
     // // now populate the array of attributes
     for (var v = 0; v < plane.geometry.vertices.length; v++) {
-        var x = v % data.nx,
-            y = Math.floor(v / data.nx);
-        attributes.temperature.value[v] = data.temp2m[(data.ny - y) * data.nx + x];
+        attributes.temperature.value[v] = data.temp2m[v];
     }
 
 
