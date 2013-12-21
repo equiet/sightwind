@@ -1,5 +1,6 @@
 public/data/data-*
 public/data/last.js
 data.nc
+data_tmp.nc
 *.kate-swp
 sandbox/*
