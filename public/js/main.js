@@ -666,8 +666,8 @@ Q(function() {
                 document.querySelector('.data_' + value).innerHTML = Math.round(data[value][coords[1]*DATA_WIDTH+coords[0]]*10)/10;
             }
         });
-        document.querySelector('.data_lat').innerHTML = Math.round(proj[0] * 100) / 100;
-        document.querySelector('.data_lon').innerHTML = Math.round(proj[1] * 100) / 100;
+        document.querySelector('.data_lat').innerHTML = Math.round(proj[1] * 100) / 100;
+        document.querySelector('.data_lon').innerHTML = Math.round(proj[0] * 100) / 100;
 
         var u = data['wind10m_u'][coords[1]*DATA_WIDTH+coords[0]],
             v = data['wind10m_v'][coords[1]*DATA_WIDTH+coords[0]],

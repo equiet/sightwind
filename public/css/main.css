@@ -142,11 +142,11 @@ a {
 	}
 	.timeline li:hover,
 	.timeline li.is-active {
-		color: #42C4CD;
+		color: rgb(94, 217, 226);
 	}
 	.timeline li:hover:before,
 	.timeline li.is-active:before {
-		background: #42C4CD;
+		background: rgb(94, 217, 226);
 		-webkit-transform: scale(1);
 	    opacity: 1;
 	}
@@ -210,7 +210,7 @@ a {
 	display: inline-block;
 	font-size: 16px;
 	padding: 10px 5px;
-	width: 45px;
+	width: 3.8em;
 	text-align: right;
 }
 	.details_item span {
@@ -218,11 +218,11 @@ a {
 	}
 	.details_item.is-wind {
 		color: #3EC68B;
-		width: 100px;
+		width: 6.5em;
 	}
 	.details_item.is-temperature {
 		color: #E54878;
-		width: 60px;
+		width: 3.8em;
 	}
 
 
