@@ -24,7 +24,7 @@ fi
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-echo "time,frame" > frames.csv
+echo "time,frame" > public/data/frames.csv
 
 for FRAME in {0..72}
 do
