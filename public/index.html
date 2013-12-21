@@ -23,15 +23,10 @@
     <div class="main">
 
         <div class="loading is-active">
-            <h3>
-                Loading...
-                <img src="data:image/gif;base64,R0lGODlhEAAQAPQAAP///wAAAPj4+Dg4OISEhAYGBiYmJtbW1qioqBYWFnZ2dmZmZuTk5JiYmMbGxkhISFZWVgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAAFUCAgjmRpnqUwFGwhKoRgqq2YFMaRGjWA8AbZiIBbjQQ8AmmFUJEQhQGJhaKOrCksgEla+KIkYvC6SJKQOISoNSYdeIk1ayA8ExTyeR3F749CACH5BAkKAAAALAAAAAAQABAAAAVoICCKR9KMaCoaxeCoqEAkRX3AwMHWxQIIjJSAZWgUEgzBwCBAEQpMwIDwY1FHgwJCtOW2UDWYIDyqNVVkUbYr6CK+o2eUMKgWrqKhj0FrEM8jQQALPFA3MAc8CQSAMA5ZBjgqDQmHIyEAIfkECQoAAAAsAAAAABAAEAAABWAgII4j85Ao2hRIKgrEUBQJLaSHMe8zgQo6Q8sxS7RIhILhBkgumCTZsXkACBC+0cwF2GoLLoFXREDcDlkAojBICRaFLDCOQtQKjmsQSubtDFU/NXcDBHwkaw1cKQ8MiyEAIfkECQoAAAAsAAAAABAAEAAABVIgII5kaZ6AIJQCMRTFQKiDQx4GrBfGa4uCnAEhQuRgPwCBtwK+kCNFgjh6QlFYgGO7baJ2CxIioSDpwqNggWCGDVVGphly3BkOpXDrKfNm/4AhACH5BAkKAAAALAAAAAAQABAAAAVgICCOZGmeqEAMRTEQwskYbV0Yx7kYSIzQhtgoBxCKBDQCIOcoLBimRiFhSABYU5gIgW01pLUBYkRItAYAqrlhYiwKjiWAcDMWY8QjsCf4DewiBzQ2N1AmKlgvgCiMjSQhACH5BAkKAAAALAAAAAAQABAAAAVfICCOZGmeqEgUxUAIpkA0AMKyxkEiSZEIsJqhYAg+boUFSTAkiBiNHks3sg1ILAfBiS10gyqCg0UaFBCkwy3RYKiIYMAC+RAxiQgYsJdAjw5DN2gILzEEZgVcKYuMJiEAOwAAAAAAAAAAAA==">
-            </h3>
+            <span class="icon-spin6 animate-spin"></span>
         </div>
 
-        <div class="error">
-
-        </div>
+        <div class="error"></div>
 
         <div class="container">
 
@@ -69,14 +64,6 @@
         Open Data from the <a href="http://openmeteofoundation.org/">Open Meteo Foundation</a>
     </div>
 
-    <script src="js/q.min.js"></script>
-    <script src="js/three.min.js"></script>
-    <script src="js/d3.js"></script>
-    <script src="js/topojson.v1.js"></script>
-    <script src="js/main.js"></script>
-
-    var scripts_to_load=["js/d3.js", "js/topojson.v1.js", "js/main.js"];
-
 
     <script type="x-shader/x-vertex" id="vertexshader">
 
@@ -105,45 +92,56 @@
 
     </script>
 
-
-
     <script>
 
-      var loadingPopup = document.querySelector('.error');
+        unsupportedBrowser = false;
 
-      function init_error (msg) {
-        loadingPopup.innerHTML="<h2>Error</h2>";
-        loadingPopup.innerHTML+="<p>Your browser does not support "+msg+" technology. <a href=\"http://caniuse.com/#search="+msg+"\" target=\"_blank\">Learn more...</a></p>";
-        loadingPopup.innerHTML+="<p>Please try with a modern browser such as Mozilla Firefox or Google Chrome.</p>";
-      }
-
-      (function(){
-
-        var c = document.createElement('canvas');
-        if (!(c.getContext && c.getContext('2d'))) {
-          init_error('Canvas');
-          return;
-        }
-        if (typeof Float32Array == "undefined") {
-          init_error('Typed Arrays');
-          return;
-        }
-        c.witdh=c.height=1;
-        var ctx=c.getContext('2d');
-        var id=ctx.getImageData(0,0, 1, 1);
-        try {
-      var test = new Float32Array(id.data.buffer);
-        } catch (e) {
-      init_error('Typed Arrays');
-          return;
-    }
-        if (typeof requestAnimationFrame == "undefined") {
-          init_error('requestAnimationFrame');
-          return;
+        function triggerError() {
+            var elError = document.querySelector('.error');
+            elError.innerHTML = '<span class="icon-attention"></span>Your browser is not supported. Try <a href="http://www.google.com/chrome">Chrome</a>.';
+            elError.classList.add('is-active');
+            window.unsupportedBrowser = true;
         }
 
-      })();
+        (function(){
+
+            // Canvas support
+            var c = document.createElement('canvas');
+            if (!c.getContext || !c.getContext('2d')) {
+                triggerError();
+                return;
+            }
+
+            // TypedArrays support
+            if (typeof Float32Array === 'undefined') {
+                triggerError();
+                return;
+            }
+            c.witdh = c.height = 1;
+            var ctx = c.getContext('2d');
+            var id = ctx.getImageData(0,0, 1, 1);
+            try {
+                var test = new Float32Array(id.data.buffer);
+            } catch (e) {
+                triggerError();
+                return;
+            }
+
+            // requestAnimationFrame()
+            if (typeof requestAnimationFrame === 'undefined') {
+                triggerError();
+                return;
+            }
+
+        })();
+
     </script>
+
+    <script src="js/q.min.js"></script>
+    <script src="js/three.min.js"></script>
+    <script src="js/d3.js"></script>
+    <script src="js/topojson.v1.js"></script>
+    <script src="js/main.js"></script>
 
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -153,6 +151,10 @@
 
       ga('create', 'UA-2529322-28', 'sightwind.com');
       ga('send', 'pageview');
+
+      if (window.unsupportedBrowser) {
+        ga('send', 'unsupportedBrowser');
+      }
     </script>
 
 

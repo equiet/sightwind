@@ -4,7 +4,7 @@ html {
 }
 body {
     margin: 0;
-    font: 12px 'Roboto', 'Helvetica', sans-serif;
+    font: 13px 'Roboto', 'Helvetica', sans-serif;
     background: #0D1A21;
     color: #fff;
     display: flex;
@@ -154,28 +154,38 @@ a {
 
 
 
-
-.loading {
-	z-index: 30;
+.loading,
+.error {
 	position: absolute;
 	top: 50%;
 	left: 50%;
-	padding: 0 20px;
+	z-index: 30;
+	padding: 10px 15px;
+	color: rgba(255,255,255,0.8);
 	-webkit-transform: translate(-50%,-50%);
 	-moz-transform: translate(-50%,-50%);
 	transform: translate(-50%,-50%);
-	text-align: center;
-	background: #fff;
-	color: #333;
 	opacity: 0;
 	-webkit-transition: opacity 0.3s;
+	-moz-transition: opacity 0.3s;
+	transition: opacity 0.3s;
 }
-	.loading.is-active {
+	.loading.is-active,
+	.error.is-active {
 		opacity: 1;
 	}
-	.loading img {
-		display: inline-block;
-		-webkit-transform: translateY(3px);
+.loading {
+	font-size: 20px;
+}
+.error {
+	background: rgba(110,23,58,1);
+}
+	.error a {
+		color: inherit;
+		font-weight: 700;
+	}
+	.error span {
+		margin: 0 5px 0 0;
 	}
 
 
@@ -302,4 +312,67 @@ svg {
 
 .cursor {
 	/*fill: #fff;*/
+}
+
+
+
+/**
+ * Icons
+ */
+
+@font-face {
+	font-family: 'fontello';
+	src: url('font/fontello.eot?27909068');
+	src: url('font/fontello.eot?27909068#iefix') format('embedded-opentype'),
+		url('font/fontello.woff?27909068') format('woff'),
+		url('font/fontello.ttf?27909068') format('truetype'),
+		url('font/fontello.svg?27909068#fontello') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+[class^="icon-"]:before, [class*=" icon-"]:before {
+	font-family: "fontello";
+	font-style: normal;
+	font-weight: normal;
+	speak: none;
+	display: inline-block;
+	text-decoration: inherit;
+	width: 1em;
+	margin-right: .2em;
+	text-align: center;
+
+	/* For safety - reset parent styles, that can break glyph codes*/
+	font-variant: normal;
+	text-transform: none;
+
+	/* Animation center compensation - margins should be symmetric */
+	/* remove if not needed */
+	margin-left: .2em;
+}
+
+.icon-spin6:before { content: '\24'; } /* '$' */
+.icon-attention:before { content: '\22'; } /* '&quot;' */
+.icon-direction:before { content: '\23'; } /* '#' */
+.icon-menu:before { content: '\25'; } /* '%' */
+.icon-play-circled:before { content: '\21'; } /* '!' */
+
+.animate-spin {
+  -moz-animation: spin 2s infinite linear;
+  -o-animation: spin 2s infinite linear;
+  -webkit-animation: spin 2s infinite linear;
+  animation: spin 2s infinite linear;
+  display: inline-block;
+}
+@-moz-keyframes spin {
+  0% { -moz-transform: rotate(0deg); }
+  100% { -moz-transform: rotate(360deg); }
+}
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
