@@ -417,7 +417,7 @@ d3.csv('data/frames.csv', function(err, rows) {
 
     loadData(0).then(function() {
 
-        runWebGL();
+        // runWebGL();
 
         var frame = 0;
         interval = setInterval(function() {
