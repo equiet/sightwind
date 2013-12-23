@@ -25,10 +25,10 @@ a {
 
 .header {
 	text-align: center;
-	padding: 20px;
+	padding: 15px;
 }
 .header_logo {
-	font: 700 30px/1 'Raleway', 'Helvetica', sans-serif;
+	font: 700 25px/1 'Raleway', 'Helvetica', sans-serif;
 	margin-bottom: 20px;
 	text-transform: lowercase;
 }
