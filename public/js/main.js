@@ -390,6 +390,13 @@ function loadData(frame) {
 
 d3.csv('data/frames.csv', function(err, rows) {
 
+    console.log(arguments)
+
+    if (err) {
+        triggerError('Couldn\'t load data');
+        return;
+    }
+
     var interval;
 
     document.querySelector('.last-update').innerHTML = new Date(rows[0].time * 1000).toLocaleString('en-US', {

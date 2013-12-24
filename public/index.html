@@ -112,11 +112,11 @@
 
         unsupportedBrowser = false;
 
-        function triggerError() {
+        function triggerError(reason) {
             var elError = document.querySelector('.error');
-            elError.innerHTML = '<span class="icon-attention"></span>Your browser is not supported. Try <a href="http://www.google.com/chrome">Chrome</a>.';
+            elError.innerHTML = '<span class="icon-attention"></span>Your browser is not supported. Reason:' + reason + '. Try <a href="http://www.google.com/chrome">Chrome</a>.';
             elError.classList.add('is-active');
-            window.unsupportedBrowser = true;
+            window.unsupportedBrowser = reason;
         }
 
         (function(){
@@ -124,13 +124,13 @@
             // Canvas support
             var c = document.createElement('canvas');
             if (!c.getContext || !c.getContext('2d')) {
-                triggerError();
+                triggerError('canvas');
                 return;
             }
 
             // TypedArrays support
             if (typeof Float32Array === 'undefined') {
-                triggerError();
+                triggerError('TypedArrays');
                 return;
             }
             c.witdh = c.height = 1;
@@ -139,13 +139,13 @@
             try {
                 var test = new Float32Array(id.data.buffer);
             } catch (e) {
-                triggerError();
+                triggerError('TypedArrays');
                 return;
             }
 
             // requestAnimationFrame()
             if (typeof requestAnimationFrame === 'undefined') {
-                triggerError();
+                triggerError('RAF');
                 return;
             }
 
@@ -180,7 +180,7 @@
       ga('send', 'pageview');
 
       if (window.unsupportedBrowser) {
-        ga('send', 'unsupportedBrowser');
+        ga('send', 'unsupportedBrowser', window.unsupportedBrowser);
       }
     </script>
 
