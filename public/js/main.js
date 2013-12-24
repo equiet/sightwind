@@ -55,8 +55,8 @@ var options = {
              '255,71,154'
         ],
         criterion: 'temp2m',
-        minParticles: 1500, // TODO 1500
-        maxParticles: 5000, // TODO 10000
+        minParticles: 500,
+        maxParticles: 5000,
         minFPS: 20
 };
 
@@ -620,6 +620,8 @@ Q(function() {
 
         svg.attr('width', elContainer.clientWidth);
         svg.attr('height', elContainer.clientHeight);
+
+        options.maxParticles = elContainer.clientWidth * 6;
 
     }
     resizeContainer();
