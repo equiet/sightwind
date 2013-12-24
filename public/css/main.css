@@ -124,32 +124,31 @@ a {
 		-moz-transform: translate(-50%, 0);
 		transform: translate(-50%, 0);
 	}
-	.timeline li.is-even span {
+	.timeline li.is-down span {
 		display: inline-block;
 		-webkit-transform: translate(-50%,23px);
 		-moz-transform: translate(-50%,23px);
 		transform: translate(-50%,23px);
 	}
-	.timeline li.is-even:before {
+	.timeline li.is-down:before {
 		-webkit-transform: scale(0.55);
 		-moz-transform: scale(0.55);
 		transform: scale(0.55);
 	    opacity: 0.5;
 	}
-	.timeline li.is-even:nth-child(4n+1) span {
+	.timeline li.is-up span {
 		display: inline-block;
 		-webkit-transform: translate(-50%,-11px);
 		-moz-transform: translate(-50%,-11px);
 		transform: translate(-50%,-11px);
 	}
-	.timeline li.is-even:nth-child(4n+1):before {
+	.timeline li.is-up:before {
 		-webkit-transform: scale(0.55);
 		-moz-transform: scale(0.55);
 		transform: scale(0.55);
 	    opacity: 0.5;
 	}
 	.timeline li.is-midnight span {
-		display: inline-block;
 		color: #fff;
 	}
 	.timeline li.is-midnight:before {
