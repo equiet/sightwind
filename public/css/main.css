@@ -169,6 +169,7 @@ a {
 	-webkit-transition: opacity 0.3s;
 	-moz-transition: opacity 0.3s;
 	transition: opacity 0.3s;
+	pointer-events: none;
 }
 	.loading.is-active,
 	.error.is-active {
@@ -278,7 +279,7 @@ svg {
 }
 
 .dataframe {
-	stroke: #fff;
+	/*stroke: #fff;*/
 }
 
 .graticule {

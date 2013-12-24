@@ -63,7 +63,8 @@ var options = {
 var currentParticles = options.minParticles;
 
 
-var t, s;
+var t = [0, 0],
+    s = 1;
 
 
 var svg, projection, g, graticulePath;
@@ -140,7 +141,6 @@ function move() {
         s = 1; // TODO
 
         g.style("stroke-width", 1 / s).attr("transform", "translate(" + [t[0], t[1]] + ")scale(" + s + ")");
-
         graticulePath.style('stroke-width', 1/s);
 
         for (var i = 0; i < ctxBuckets.length; i++) {
@@ -470,11 +470,12 @@ Q(function() {
         var grid_center = {lat: 47.5, lon: 4};
 
         projection = d3.geo.conicConformal()
-            .center([47.5, 4])
+            // .center([47.5, 4])
+            .center([44.5, 0]) // ?
             .scale(width)
             .rotate([-grid_center.lon, 0])
             .parallels([47.5, 47.5])
-            .translate([width, height])
+            // .translate([width/2, height/2])
             .precision(0.1);
 
         var path = d3.geo.path()
