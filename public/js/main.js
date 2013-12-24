@@ -392,6 +392,15 @@ d3.csv('data/frames.csv', function(err, rows) {
 
     var interval;
 
+    document.querySelector('.last-update').innerHTML = new Date(rows[0].time * 1000).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false
+    });
+
     NodeList.prototype.forEach = Array.prototype.forEach;
 
     var elFooter = document.querySelector('.footer');

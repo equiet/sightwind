@@ -15,6 +15,7 @@ body {
 a {
 	color: #3EC68B;
 	text-decoration: none;
+	font-weight: 500;
 }
 	a:hover {
 		color: #3D9D74;
@@ -226,12 +227,52 @@ a {
 		width: 3.8em;
 	}
 
-
+.show-info {
+	position: absolute;
+	left: 100%;
+	top: 5px;
+	background: rgba(255,255,255,0.1);
+	line-height: 25px;
+	width: 30px;
+	text-align: center;
+	border: none;
+	color: #fff;
+	margin: 0;
+}
+	.show-info.is-active {
+		background: #fff;
+		color: #333;
+	}
 .info {
 	position: absolute;
+	top: 0;
+	right: 0;
 	bottom: 0;
-	left: 0;
+	z-index: 50;
+	background: #fff;
+	color: #333;
+	width: 270px;
+	padding: 15px 20px;
+	display: none;
 }
+	.info.is-active {
+		display: block;
+	}
+	.info table {
+		width: 100%;
+	}
+	.info th {
+		text-align: left;
+		font-weight: normal;
+	}
+	.info td {
+		text-align: right;
+	}
+	.info hr {
+		border: none;
+		border-bottom: 1px solid rgba(0,0,0,0.1);
+		margin: 10px -20px;
+	}
 
 
 

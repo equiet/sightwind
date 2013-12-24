@@ -51,6 +51,25 @@
                 </li>
             </ul>
 
+            <button class="show-info"><i class="icon-menu"></i></button>
+
+            <div class="info">
+                <table>
+                    <tr>
+                        <th>Last update:</th>
+                        <td class="last-update"></td>
+                    </tr>
+                    <tr>
+                        <th>Source:</th>
+                        <td><a href="http://openmeteofoundation.org/">Open Meteo Foundation</a></td>
+                    </tr>
+                </table>
+                <hr>
+                <p><strong>Sightwind</strong> was designed by <a href="https://twitter.com/equiet">Jakub Jurových</a> for a Complex Data Visualizations course at Masaryk University.</p>
+                <p>Huge thanks to Nicolas Baldeck from Open Meteo Foundation. <a href="http://openmeteofoundation.org/">Open Meteo Foundation</a> computes a weather model for Europe and provides free access to it.</p>
+                <p>If you want to ask me anything or just want to know what I am up to next, you can <a href="https://twitter.com/equiet">follow me on Twitter</a>.</p>
+            </div>
+
         </div>
 
         <!-- <img src="sightwind_lcc_bilinear.png" style="pointer-events:none;position:absolute;top:50%;left:50%;z-index:0;opacity:0.5;-webkit-transform:translate(-2188px,-863px) scale(0.62) rotate(6.3deg);" alt=""> -->
@@ -60,11 +79,6 @@
 
     <footer class="footer">
     </footer>
-
-    <div class="info">
-        Forecast for <span id="time-text"></span><br>
-        Open Data from the <a href="http://openmeteofoundation.org/">Open Meteo Foundation</a>
-    </div>
 
 
     <script type="x-shader/x-vertex" id="vertexshader">
@@ -136,6 +150,17 @@
             }
 
         })();
+
+    </script>
+
+    <script>
+
+        document.querySelector('.show-info').addEventListener('click', function(e) {
+
+            document.querySelector('.show-info').classList.toggle('is-active');
+            document.querySelector('.info').classList.toggle('is-active');
+
+        });
 
     </script>
 
