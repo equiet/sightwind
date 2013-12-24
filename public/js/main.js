@@ -690,6 +690,8 @@ Q(function() {
 
         document.querySelector('.data_wind10m_speed').innerHTML = speed;
         document.querySelector('.data_wind10m_dir').style.webkitTransform = 'rotate(' + dir + 'deg)';
+        document.querySelector('.data_wind10m_dir').style.mozTransform = 'rotate(' + dir + 'deg)';
+        document.querySelector('.data_wind10m_dir').style.transform = 'rotate(' + dir + 'deg)';
 
     });
 

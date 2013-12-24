@@ -109,29 +109,43 @@ a {
 			border-radius: 100%;
 			background: #fff;
 			-webkit-transform: scale(0.3);
+			-moz-transform: scale(0.3);
+			transform: scale(0.3);
 			opacity: 0.2;
 			-webkit-transition: all 0.3s;
+			-moz-transition: all 0.3s;
+			transition: all 0.3s;
 		}
 	.timeline span {
 		position: absolute;
 		display: none;
 		left: 4px;
 		-webkit-transform: translate(-50%, 0);
+		-moz-transform: translate(-50%, 0);
+		transform: translate(-50%, 0);
 	}
 	.timeline li:nth-child(4n+3) span {
 		display: inline-block;
 		-webkit-transform: translate(-50%,23px);
+		-moz-transform: translate(-50%,23px);
+		transform: translate(-50%,23px);
 	}
 	.timeline li:nth-child(4n+3):before {
 		-webkit-transform: scale(0.55);
+		-moz-transform: scale(0.55);
+		transform: scale(0.55);
 	    opacity: 0.5;
 	}
 	.timeline li:nth-child(4n+1) span {
 		display: inline-block;
 		-webkit-transform: translate(-50%,-11px);
+		-moz-transform: translate(-50%,-11px);
+		transform: translate(-50%,-11px);
 	}
 	.timeline li:nth-child(4n+1):before {
 		-webkit-transform: scale(0.55);
+		-moz-transform: scale(0.55);
+		transform: scale(0.55);
 	    opacity: 0.5;
 	}
 	.timeline li.is-midnight span {
@@ -139,6 +153,8 @@ a {
 	}
 	.timeline li.is-midnight:before {
 		-webkit-transform: scale(1);
+		-moz-transform: scale(1);
+		transform: scale(1);
 	    opacity: 1;
 	}
 	.timeline li:hover,
@@ -149,6 +165,8 @@ a {
 	.timeline li.is-active:before {
 		background: rgb(94, 217, 226);
 		-webkit-transform: scale(1);
+		-moz-transform: scale(1);
+		transform: scale(1);
 	    opacity: 1;
 	}
 
@@ -204,6 +222,8 @@ a {
 	border-radius: 3px;
 	opacity: 0;
 	-webkit-transition: opacity 0.7s;
+	-moz-transition: opacity 0.7s;
+	transition: opacity 0.7s;
 }
 	.details.is-active {
 		opacity: 1;
@@ -283,9 +303,12 @@ a {
 	left: 50%;
 	-webkit-transform: translateX(-50%);
 	-moz-transform: translateX(-50%);
+	transform: translateX(-50%);
 	box-shadow: 0 1px 4px rgba(0,0,0,0.7);
 	opacity: 0;
 	-webkit-transition: opacity 1s;
+	-moz-transition: opacity 1s;
+	transition: opacity 1s;
 }
 	.container.is-active {
 		opacity: 1;
