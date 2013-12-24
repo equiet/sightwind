@@ -413,14 +413,14 @@ d3.csv('data/frames.csv', function(err, rows) {
     var elFooter = document.querySelector('.footer');
     elFooter.innerHTML =
         '<ul class="timeline">' +
-            rows.map(function(row) {
+            rows.map(function(row, index) {
                 var date = new Date(parseInt(row.time, 10) * 1000);
                 if (date.getHours() % 24 === 0) {
-                    return '<li data-frame="' + row.frame + '" data-time="' + row.time + '" class="is-midnight">' +
+                    return '<li data-frame="' + row.frame + '" data-time="' + row.time + '" class="is-midnight is-' + (date.getHours() % 2 == 0 ? 'even' : 'odd') + '">' +
                         '<span>' + date.toDateString().slice(4, 10) + '</span>' +
                         '</li>';
                 } else {
-                    return '<li data-frame="' + row.frame + '" data-time="' + row.time + '">' +
+                    return '<li data-frame="' + row.frame + '" data-time="' + row.time + '" class="is-' + (date.getHours() % 2 == 0 ? 'even' : 'odd') + '">' +
                         '<span>' + date.getHours() % 24 + ':00</span>' +
                         '</li>';
                 }
