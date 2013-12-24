@@ -325,6 +325,8 @@ function loadData(frame) {
 
     var tmpData = {};
 
+    document.querySelector('.loading').classList.add('is-active');
+
     /**
      * Load image
      */
@@ -378,6 +380,8 @@ function loadData(frame) {
             el.classList.remove('is-active');
         });
         document.querySelector('.timeline li[data-frame="' + frame + '"]').classList.add('is-active');
+
+        document.querySelector('.loading').classList.remove('is-active');
 
     });
 
