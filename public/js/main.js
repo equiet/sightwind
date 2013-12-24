@@ -415,14 +415,17 @@ d3.csv('data/frames.csv', function(err, rows) {
     });
 
 
-    loadData(0).then(function() {
+    var hoursSinceLastUpdate = Math.round((Date.now() / 1000 - rows[0].time) / 3600),
+        currentFrame = clamp(hoursSinceLastUpdate, 0, 72);
+
+    loadData(currentFrame).then(function() {
 
         // runWebGL();
 
-        var frame = 0;
-        interval = setInterval(function() {
-            loadData(++frame % 72);
-        }, 1000);
+        // var frame = 0;
+        // interval = setInterval(function() {
+        //     loadData(++frame % 72);
+        // }, 1000);
 
         elContainer.classList.add('is-active');
 
@@ -506,15 +509,10 @@ Q(function() {
         projTopLeft = projection(DATA_CORNERS.topLeft);
         projBottomRight = projection(DATA_CORNERS.bottomRight);
 
-        console.log(projection(DATA_CORNERS.topLeft), [elContainer.clientWidth / 2, elContainer.clientHeight / 2]);
-
         var upscale = elContainer.clientWidth / (projBottomRight[0] - projTopLeft[0]);
         projection
             .scale(width * upscale)
             .translate([width * upscale, height * upscale]);
-
-        console.log(projection(DATA_CORNERS.topLeft));
-        // TODO get topLeft projection and translate accordingly
 
 
 
