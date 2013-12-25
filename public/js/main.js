@@ -517,8 +517,8 @@ Q(function() {
             .attr("width", width)
             .attr("height", height)
             .append("g")
-            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
-            .call(zoom);
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+            // .call(zoom);
         g = svg.append('g');
 
 
