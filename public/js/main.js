@@ -384,7 +384,6 @@ function loadData(frame) {
         document.querySelector('.loading').classList.remove('is-active');
 
     });
-
 }
 
 
@@ -436,7 +435,7 @@ d3.csv('data/frames.csv', function(err, rows) {
 
 
     var hoursSinceLastUpdate = Math.round((Date.now() / 1000 - rows[0].time) / 3600),
-        currentFrame = clamp(hoursSinceLastUpdate, 0, 72);
+        currentFrame = clamp(hoursSinceLastUpdate, 0, rows.length - 1);
 
     loadData(currentFrame).then(function() {
 
