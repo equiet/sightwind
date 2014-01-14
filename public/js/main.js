@@ -409,7 +409,7 @@ d3.csv('data/frames.csv', function(err, rows) {
 
         elContainer.classList.add('is-active');
 
-    });
+    }).done();
 
 });
 
@@ -703,7 +703,7 @@ function runWebGL() {
         endColor: { type: 'c', value: new THREE.Color(0x1e0829) },
         // endColor: { type: 'c', value: new THREE.Color(0x1e0829) },
         minTemperature: { type: 'f', value: options.colorScale[0].color },
-        maxTemperature: { type: 'f', value: options.colorScale[options.colorScale - 1].color }
+        maxTemperature: { type: 'f', value: options.colorScale[options.colorScale.length - 1].color }
     };
 
     // create the sphere's material
