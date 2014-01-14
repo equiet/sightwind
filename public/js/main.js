@@ -46,19 +46,22 @@ var options = {
         lineWidth: 1,
         colorAlpha: 0.6,
         globalAlpha: 0.96,
-        color: [
-             '71,132,255',
-             '110,118,233',
-             '149,105,211',
-             '189,92,190',
-             '228,79,168',
-             '255,71,154'
+        colorScale: [
+            // Half-closed interval [start, end)
+            {start: -Infinity, end: -7,  color: '77,66,230'},
+            {start: -7, end: 0,      color: '137,121,234'},
+            {start: 0, end: 7,        color: '160,85,212'},
+            {start: 7, end: 14,          color: '219,71,188'},
+            {start: 14, end: 21,         color: '239,40,141'},
+            {start: 21, end: 28,        color: '247,40,109'},
+            {start: 28, end: Infinity,        color: '255,52,65'},
         ],
         criterion: 'temp2m',
         minParticles: 500,
         maxParticles: 5000,
         minFPS: 20
 };
+
 
 var currentParticles = options.minParticles;
 
@@ -200,38 +203,7 @@ Particle.prototype.nextPositionY = function () {
 
 
 
-var particles = [],
-    bounds = [],
-    boundsMin,
-    boundsMax;
-
-
-function setupBounds(criterion) {
-
-    // Find min/max
-    boundsMin = Infinity;
-    boundsMax = -Infinity;
-    for (var i = 0; i < data[criterion].length; i++) {
-        var val = data[criterion][i];
-        boundsMin = Math.min(boundsMin, val);
-        boundsMax = Math.max(boundsMax, val);
-    }
-
-    // TODO find global min, max
-    boundsMin = -10;
-    boundsMax = 25;
-
-    // Find temp bounds
-    var step = (boundsMax - boundsMin) / options.color.length;
-    bounds = [];
-    for (var i = 0; i < options.color.length; i++) {
-        bounds.push({
-             low: boundsMin + step * i,
-             high: boundsMin + step * (i + 1)
-        });
-    }
-
-}
+var particles = [];
 
 
 
@@ -270,21 +242,20 @@ function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(buffer, 0, 0);
 
-    for (var i = 0; i < options.color.length; i++) {
-
+    for (var i = 0; i < options.colorScale.length; i++) {
 
         ctx.beginPath();
 
-        ctx.lineWidth = options.lineWidth;
-        ctx.strokeStyle = 'rgba(' + options.color[i] + ',' + options.colorAlpha + ')';
+            ctx.lineWidth = options.lineWidth;
+            ctx.strokeStyle = 'rgba(' + options.colorScale[i].color + ',' + options.colorAlpha + ')';
 
-        for (var j = 0; j < currentParticles; j++) {
-            var criterion = data[options.criterion][particles[j].dataCoordY*DATA_WIDTH+particles[j].dataCoordX];
-            if (bounds[i].low <= criterion && criterion < bounds[i].high) {
-                ctx.moveTo(particles[j].x, particles[j].y);
-                ctx.lineTo(particles[j].nextPositionX(), particles[j].nextPositionY());
+            for (var j = 0; j < currentParticles; j++) {
+                var criterion = data[options.criterion][particles[j].dataCoordY*DATA_WIDTH+particles[j].dataCoordX];
+                if (options.colorScale[i].start <= criterion && criterion < options.colorScale[i].end) {
+                    ctx.moveTo(particles[j].x, particles[j].y);
+                    ctx.lineTo(particles[j].nextPositionX(), particles[j].nextPositionY());
+                }
             }
-        }
 
         ctx.stroke();
 
@@ -309,15 +280,6 @@ function render() {
     }
 
 }
-
-
-// NodeList.prototype.forEach = Array.prototype.forEach;
-// document.querySelectorAll('.header_nav a').forEach(function(el) {
-//     el.addEventListener('click', function(e) {
-//         e.preventDefault();
-//         setupBounds(el.dataset.criterion);
-//     });
-// });
 
 
 
@@ -373,7 +335,6 @@ function loadData(frame) {
     })).then(function() {
 
         data = tmpData;
-        setupBounds('temp2m');
         dataLoaded = true;
 
         document.querySelectorAll('.timeline li').forEach(function(el) {
@@ -741,8 +702,8 @@ function runWebGL() {
         startColor: { type: 'c', value: new THREE.Color(0x124156) },
         endColor: { type: 'c', value: new THREE.Color(0x1e0829) },
         // endColor: { type: 'c', value: new THREE.Color(0x1e0829) },
-        minTemperature: { type: 'f', value: boundsMin },
-        maxTemperature: { type: 'f', value: boundsMax }
+        minTemperature: { type: 'f', value: options.colorScale[0].color },
+        maxTemperature: { type: 'f', value: options.colorScale[options.colorScale - 1].color }
     };
 
     // create the sphere's material
