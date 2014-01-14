@@ -94,8 +94,8 @@ var dataLoaded = false;
 var elMain = document.querySelector('.main'),
     elContainer = document.querySelector('.container');
 
-var canvasBuckets = [],
-    ctxBuckets = [],
+var canvas,
+    ctx,
     buffer,
     bufferCtx,
     tempCanvas,
@@ -143,9 +143,7 @@ function move() {
         g.style("stroke-width", 1 / s).attr("transform", "translate(" + [t[0], t[1]] + ")scale(" + s + ")");
         graticulePath.style('stroke-width', 1/s);
 
-        for (var i = 0; i < ctxBuckets.length; i++) {
-            ctxBuckets[i].clearRect(0, 0, canvasBuckets[i].width, canvasBuckets[i].height);
-        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         canvasDim = {
              width: elContainer.clientWidth,
@@ -266,27 +264,29 @@ function render() {
        particles[j].refreshCoords();
     }
 
-    for (var i = 0; i < canvasBuckets.length; i++) {
+    // Fade old pixels
+    bufferCtx.clearRect(0, 0, buffer.width, buffer.height);
+    bufferCtx.drawImage(canvas, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(buffer, 0, 0);
 
-        bufferCtx.clearRect(0, 0, buffer.width, buffer.height);
-        bufferCtx.drawImage(canvasBuckets[i], 0, 0);
-        ctxBuckets[i].clearRect(0, 0, canvasBuckets[i].width, canvasBuckets[i].height);
-        ctxBuckets[i].drawImage(buffer, 0, 0);
+    for (var i = 0; i < options.color.length; i++) {
 
-        ctxBuckets[i].beginPath();
 
-        ctxBuckets[i].lineWidth = options.lineWidth;
-        ctxBuckets[i].strokeStyle = 'rgba(' + options.color[i] + ',' + options.colorAlpha + ')';
+        ctx.beginPath();
+
+        ctx.lineWidth = options.lineWidth;
+        ctx.strokeStyle = 'rgba(' + options.color[i] + ',' + options.colorAlpha + ')';
 
         for (var j = 0; j < currentParticles; j++) {
             var criterion = data[options.criterion][particles[j].dataCoordY*DATA_WIDTH+particles[j].dataCoordX];
             if (bounds[i].low <= criterion && criterion < bounds[i].high) {
-                ctxBuckets[i].moveTo(particles[j].x, particles[j].y);
-                ctxBuckets[i].lineTo(particles[j].nextPositionX(), particles[j].nextPositionY());
+                ctx.moveTo(particles[j].x, particles[j].y);
+                ctx.lineTo(particles[j].nextPositionX(), particles[j].nextPositionY());
             }
         }
 
-        ctxBuckets[i].stroke();
+        ctx.stroke();
 
     }
 
@@ -295,14 +295,14 @@ function render() {
     /**
      * FPS counter
      */
-     var fps = fpsCounter(1000 / (timeDiff * 16));
+    var fps = fpsCounter(1000 / (timeDiff * 16));
 
-     ctxBuckets[0].clearRect(0, 0, 100, elContainer.clientHeight);
-     ctxBuckets[0].fillStyle = '#ffffff';
-     ctxBuckets[0].fillText(fps, 0, elContainer.clientHeight);
-     ctxBuckets[0].fillText(currentParticles, 30, elContainer.clientHeight);
+    ctx.clearRect(0, elContainer.clientHeight - 15, 80, elContainer.clientHeight);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(fps, 0, elContainer.clientHeight);
+    ctx.fillText(currentParticles, 30, elContainer.clientHeight);
 
-     if (fps > options.minFPS) {
+    if (fps > options.minFPS) {
         currentParticles = Math.min(currentParticles + 100, options.maxParticles);
     } else {
         currentParticles = Math.max(currentParticles - 100, options.minParticles);
@@ -601,11 +601,9 @@ Q(function() {
     heatCanvas.classList.add('heat');
 
     // Create canvas layers
-    for (var i = 0; i < options.color.length; i++) {
-        canvasBuckets[i] = document.createElement('canvas');
-        elContainer.appendChild(canvasBuckets[i]);
-        ctxBuckets[i] = canvasBuckets[i].getContext('2d');
-    }
+    canvas = document.createElement('canvas');
+    elContainer.appendChild(canvas);
+    ctx = canvas.getContext('2d');
 
 
 
@@ -626,12 +624,8 @@ Q(function() {
             elContainer.style.height = (elMain.clientWidth / containerAspectRatio) + 'px';
         }
 
-        for (var i = 0; i < canvasBuckets.length; i++) {
-            canvasBuckets[i].width = elContainer.clientWidth;
-            canvasBuckets[i].height = elContainer.clientHeight;
-        }
-        buffer.width  = tempCanvas.width  = heatCanvas.width  = elContainer.clientWidth;
-        buffer.height = tempCanvas.height = heatCanvas.height = elContainer.clientHeight;
+        canvas.width  = buffer.width  = tempCanvas.width  = heatCanvas.width  = elContainer.clientWidth;
+        canvas.height = buffer.height = tempCanvas.height = heatCanvas.height = elContainer.clientHeight;
 
         svg.attr('width', elContainer.clientWidth);
         svg.attr('height', elContainer.clientHeight);
