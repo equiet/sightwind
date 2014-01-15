@@ -523,7 +523,7 @@ Q(function() {
              .data(topojson.feature(world, world.objects.countries).features)
              .enter().append('path')
                         // .attr('class', 'country')
-                        .attr('class', function(d,i) { return 'country countr-' + d.id; })
+                        .attr('class', function(d,i) { return 'country country-' + d.id; })
                         .attr('d', path);
 
         deferred.resolve();
