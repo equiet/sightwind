@@ -354,13 +354,22 @@ svg {
 }
 
 .country {
-    stroke: #385E6E;
-	fill: #10242C;
+    /*stroke: #0C1519;*/
+	fill: #112A35;
     pointer-events: all;
+    -webkit-transition: fill 0.3s;
+    -moz-transition: fill 0.3s;
+    transition: fill 0.3s;
 }
+	.country:hover {
+		fill: #184052;
+	}
 	.country-10 {
 		fill: none;
 	}
+		.country-10:hover {
+			fill: none;
+		}
 /*.country:hover {
     fill: rgba(255,255,255,0.1);
 }*/

@@ -269,7 +269,7 @@ function render() {
     var fps = fpsCounter(1000 / (timeDiff * 16));
 
     ctx.clearRect(0, elContainer.clientHeight - 15, 80, elContainer.clientHeight);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.fillText(fps, 0, elContainer.clientHeight);
     ctx.fillText(currentParticles, 30, elContainer.clientHeight);
 
