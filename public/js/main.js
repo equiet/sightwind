@@ -2,72 +2,35 @@
 'use strict';
 
 
-var Dispatcher = new function() {
-
-    var events = {};
-
-    this.on = function(e, fn) {
-        if (!events[e]) {
-            events[e] = [];
-        }
-        if (events[e].indexOf(fn) === -1) {
-            events[e].push(fn);
-        }
-    };
-    this.off = function(e, fn) {
-        if (!events[e]) {
-            events[e] = [];
-        }
-        if (events.indexOf(fn) !== -1) {
-            events.splice(events.indexOf(fn), 1);
-        }
-    };
-    this.trigger = function(e) {
-        if (!events[e]) {
-            events[e] = [];
-        }
-        var args = Array.prototype.slice.call(arguments, 1);
-        events[e].forEach(function(fn) {
-            fn.apply(null, args);
-        });
-    };
-
-}();
-
-
 
 var now = Date.now(),
-        timeDiff,
-        lastTick = Date.now();
+    timeDiff,
+    lastTick = Date.now();
 
 var options = {
-        speedFactor: 0.03,
-        lifeTime: 1000,
-        lineWidth: 1,
-        colorAlpha: 0.6,
-        globalAlpha: 0.96,
-        colorScale: [
-            // Half-closed interval [start, end)
-            {start: -Infinity, end: -7,  color: '77,66,230'},
-            {start: -7, end: 0,      color: '137,121,234'},
-            {start: 0, end: 7,        color: '160,85,212'},
-            {start: 7, end: 14,          color: '219,71,188'},
-            {start: 14, end: 21,         color: '239,40,141'},
-            {start: 21, end: 28,        color: '247,40,109'},
-            {start: 28, end: Infinity,        color: '255,52,65'},
-        ],
-        criterion: 'temp2m',
-        minParticles: 500,
-        maxParticles: 5000,
-        minFPS: 20
+    speedFactor: 0.03,
+    lifeTime: 1000,
+    lineWidth: 1,
+    colorAlpha: 0.6,
+    globalAlpha: 0.96,
+    colorScale: [
+        // Half-closed interval [start, end)
+        {start: -Infinity, end: -7,  color: '77,66,230'},
+        {start: -7, end: 0,      color: '137,121,234'},
+        {start: 0, end: 7,        color: '160,85,212'},
+        {start: 7, end: 14,          color: '219,71,188'},
+        {start: 14, end: 21,         color: '239,40,141'},
+        {start: 21, end: 28,        color: '247,40,109'},
+        {start: 28, end: Infinity,        color: '255,52,65'},
+    ],
+    criterion: 'temp2m',
+    minParticles: 500,
+    maxParticles: 5000,
+    minFPS: 20
 };
 
 
 var currentParticles = options.minParticles;
-
-
-var t = [0, 0],
-    s = 1;
 
 
 var svg, projection, g, graticulePath;
@@ -117,44 +80,11 @@ var DATA_CORNERS = {
     bottomRight: [32.1064453125, 26.117345809936523]
 };
 
-var data;
-
-var dataParams = ['wind10m_u', 'wind10m_v', 'temp2m'];
-
-
-var projTopLeft, projBottomRight;
-var gridSize;
-
-
-var canvasDim;
+var data,
+    dataParams = ['wind10m_u', 'wind10m_v', 'temp2m'];
 
 
 
-
-
-function move() {
-
-        if (d3.event) {
-             t = d3.event.translate;
-             s = d3.event.scale;
-        } else {
-             t = [0,0];
-             s = 1;
-        }
-
-        s = 1; // TODO
-
-        g.style("stroke-width", 1 / s).attr("transform", "translate(" + [t[0], t[1]] + ")scale(" + s + ")");
-        graticulePath.style('stroke-width', 1/s);
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        canvasDim = {
-             width: elContainer.clientWidth,
-             height: elContainer.clientHeight
-        };
-
-}
 
 
 
@@ -165,8 +95,8 @@ function clamp(val, min, max) {
 
 function getDataCoords(x, y) {
     return [
-        Math.floor(x / canvasDim.width * DATA_WIDTH),
-        Math.floor(y / canvasDim.height * DATA_HEIGHT),
+        Math.floor(x / canvas.width * DATA_WIDTH),
+        Math.floor(y / canvas.height * DATA_HEIGHT),
     ];
 }
 
@@ -177,28 +107,28 @@ function Particle(x, y) {
     this.reset(Math.floor(now + Math.random() * options.lifeTime));
 }
 Particle.prototype.reset = function (lifeTime) {
-    this.x = Math.floor(Math.random() * canvasDim.width);
-    this.y = Math.floor(Math.random() * canvasDim.height);
+    this.x = Math.floor(Math.random() * canvas.width);
+    this.y = Math.floor(Math.random() * canvas.height);
     this.refreshCoords();
     this.lifeTime = lifeTime || now + options.lifeTime;
 };
 Particle.prototype.tick = function () {
-    if (this.x > canvasDim.width || this.x < 0 ||
-        this.y > canvasDim.height || this.y < 0 ||
+    if (this.x > canvas.width || this.x < 0 ||
+        this.y > canvas.height || this.y < 0 ||
         this.lifeTime < now) {
         this.reset();
     }
 };
 Particle.prototype.refreshCoords = function () {
-    this.dataCoordX = Math.floor(this.x / canvasDim.width * DATA_WIDTH);
-    this.dataCoordY = Math.floor(this.y / canvasDim.height * DATA_HEIGHT);
+    this.dataCoordX = Math.floor(this.x / canvas.width * DATA_WIDTH);
+    this.dataCoordY = Math.floor(this.y / canvas.height * DATA_HEIGHT);
 };
 Particle.prototype.nextPositionX = function () {
-    this.x = this.x + data.wind10m_u[this.dataCoordY*DATA_WIDTH+this.dataCoordX] * timeDiff * options.speedFactor * s;
+    this.x = this.x + data.wind10m_u[this.dataCoordY*DATA_WIDTH+this.dataCoordX] * timeDiff * options.speedFactor;
     return this.x;
 };
 Particle.prototype.nextPositionY = function () {
-    this.y = this.y - data.wind10m_v[this.dataCoordY*DATA_WIDTH+this.dataCoordX] * timeDiff * options.speedFactor * s;
+    this.y = this.y - data.wind10m_v[this.dataCoordY*DATA_WIDTH+this.dataCoordX] * timeDiff * options.speedFactor;
     return this.y;
 };
 
@@ -485,11 +415,6 @@ Q(function() {
         var path = d3.geo.path()
             .projection(projection);
 
-        var zoom = d3.behavior.zoom()
-            .center([width/2, height/2])
-            .scaleExtent([0, 3])
-            .on("zoom", move);
-
         var graticule = d3.geo.graticule()
             .extent([[-90,0], [90, 90]])
             .step([5, 5]);
@@ -499,18 +424,17 @@ Q(function() {
             .attr("height", height)
             .append("g")
             .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-            // .call(zoom);
         g = svg.append('g');
+
 
 
         /**
          * Adjust scale
          */
 
-        projTopLeft = projection(DATA_CORNERS.topLeft);
-        projBottomRight = projection(DATA_CORNERS.bottomRight);
-
-        var upscale = elContainer.clientWidth / (projBottomRight[0] - projTopLeft[0]);
+        var projTopLeft = projection(DATA_CORNERS.topLeft),
+            projBottomRight = projection(DATA_CORNERS.bottomRight),
+            upscale = elContainer.clientWidth / (projBottomRight[0] - projTopLeft[0]);
         projection
             .scale(width * upscale)
             .translate([width * upscale, height * upscale]);
@@ -621,11 +545,6 @@ Q(function() {
 
 
 
-    move();
-
-
-
-
 
 
 
@@ -652,8 +571,8 @@ Q(function() {
 
         var offset = elContainer.getBoundingClientRect();
         var proj = projection.invert([
-            e.pageX - offset.left - elContainer.clientWidth / 2 - t[0],
-            e.pageY - offset.top - elContainer.clientHeight / 2 - t[1]
+            e.pageX - offset.left - elContainer.clientWidth / 2,
+            e.pageY - offset.top - elContainer.clientHeight / 2
         ]);
         var coords = getDataCoords(e.pageX - offset.left, e.pageY - offset.top);
 
@@ -750,12 +669,6 @@ function runWebGL() {
     }
 
 
-    Dispatcher.on('move', function() {
-        // camera.position.x = t[0];
-        // camera.position.y = t[1];
-    });
-
-
 
     var frame = 0;
 
@@ -769,27 +682,5 @@ function runWebGL() {
     }
     render();
 
-    // move();
 
-}
-
-
-
-
-function update_time(frame_time) {
-    var timeText = document.getElementById("time-text");
-    var d = new Date(0);
-    d.setUTCMilliseconds(frame_time*1000);
-    var hour=d.getHours();
-    var minutes=d.getMinutes();
-    if (hour < 10) hour = "0"+hour;
-    if (minutes < 10) minutes = "0"+minutes;
-    timeText.innerHTML=d.toLocaleDateString()+", "+hour+":"+minutes;
-    var tz=-1*d.getTimezoneOffset()/60;
-    if (tz > 0) {
-        timeText.innerHTML+=" UTC+"+tz;
-    } else {
-        tz *= -1;
-        timeText.innerHTML+=" UTC-"+tz;
-    }
 }
