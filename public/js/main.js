@@ -104,7 +104,8 @@ var canvas,
     tempCanvas,
     tempCtx,
     heatCanvas,
-    heatCtx;
+    heatCtx,
+    scaleGradient;
 
 var DATA_WIDTH = 495,
     DATA_HEIGHT = 309;
@@ -264,12 +265,32 @@ function render() {
 
 
     /**
+     * Draw scale
+     */
+
+    var scaleWidth = 200,
+        scaleHeight = 15;
+    scaleGradient = ctx.createLinearGradient(canvas.width - scaleWidth - 20, 0, canvas.width - 20, 0);
+    for (i = 0; i < options.colorScale.length; i++) {
+        scaleGradient.addColorStop(i / options.colorScale.length, 'rgb(' + options.colorScale[i].color + ')');
+    }
+    ctx.fillStyle = scaleGradient;
+    ctx.fillRect(canvas.width - 220, canvas.height - 30, 200, 15);
+    ctx.textAlign = 'center';
+    for (i = 1; i < options.colorScale.length; i++) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(options.colorScale[i].start, canvas.width - scaleWidth - 20 + i / options.colorScale.length * scaleWidth, canvas.height - 19);
+    }
+
+
+    /**
      * FPS counter
      */
     var fps = fpsCounter(1000 / (timeDiff * 16));
 
     ctx.clearRect(0, elContainer.clientHeight - 15, 80, elContainer.clientHeight);
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.textAlign = 'start';
     ctx.fillText(fps, 0, elContainer.clientHeight);
     ctx.fillText(currentParticles, 30, elContainer.clientHeight);
 
