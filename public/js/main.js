@@ -35,7 +35,7 @@ var tempToColor = function(temp) {
             return options.colorScale[i].color;
         }
     }
-}
+};
 
 
 var currentParticles = options.minParticles;
@@ -43,7 +43,7 @@ var currentParticles = options.minParticles;
 
 var svg, projection, g, graticulePath;
 
-svg = d3.select("svg").append("g");
+svg = d3.select('#map').append('g');
 g = svg.append('g');
 
 
@@ -304,7 +304,7 @@ function loadData(frame) {
         document.querySelectorAll('.timeline li').forEach(function(el) {
             el.classList.remove('is-active');
         });
-        document.querySelector('.timeline li[data-frame="' + frame + '"]').classList.add('is-active');
+        // document.querySelector('.footer_timeline g:nth-child(' + frame + ')').classList.add('is-active');
 
         document.querySelector('.loading').classList.remove('is-active');
 
@@ -332,24 +332,38 @@ d3.csv('data/frames.csv', function(err, rows) {
 
     NodeList.prototype.forEach = Array.prototype.forEach;
 
-    var elFooter = document.querySelector('.footer');
-    elFooter.innerHTML =
-        '<ul class="timeline">' +
-            rows.map(function(row, index) {
-                var date = new Date(parseInt(row.time, 10) * 1000);
-                if (date.getHours() % 24 === 0) {
-                    return '<li data-frame="' + row.frame + '" data-time="' + row.time + '" class="is-midnight is-down">' +
-                        '<span>' + date.toDateString().slice(4, 10) + '</span>' +
-                        '</li>';
-                } else {
-                    return '<li data-frame="' + row.frame + '" data-time="' + row.time + '" class="is-' + (date.getHours() % 4 === 2 ? 'up' : '') + ' is-' + (date.getHours() % 4 === 0 ? 'down' : '') + '">' +
-                        '<span>' + date.getHours() % 24 + ':00</span>' +
-                        '</li>';
-                }
-            }).join('') +
-        '</ul>';
+    // date.toDateString().slice(4, 10)
 
-    elFooter.querySelectorAll('li').forEach(function(el) {
+    var timeline = d3.select('.footer_timeline').attr('width', 500).attr('height', 60);
+
+    var points = timeline.selectAll('g')
+        .data(rows)
+        .enter();
+
+    var tick = points.append('g')
+        .attr('transform', function(d, i) { return 'translate(' + (i*10 + 20) + ',30)'; })
+        .on('click', function(d, i) {
+            loadData(parseInt(i, 10));
+            clearInterval(interval);
+        });
+    tick.append('circle')
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .attr('r', 4);
+    tick.append('text')
+        .attr('dy', 20)
+        .text(function(d, i) { return (new Date(parseInt(d.time, 10) * 1000).getHours() % 24) + ':00'; });
+
+
+    var elFooterLevel = document.querySelector('.footer_level');
+    elFooterLevel.innerHTML =
+        rows.map(function(row, index) {
+            var date = new Date(parseInt(row.time, 10) * 1000);
+            return '<li data-frame="' + row.frame + '" data-time="' + row.time + '" class="is-' + (date.getHours() % 4 === 2 ? 'up' : '') + ' is-' + (date.getHours() % 4 === 0 ? 'down' : '') + '">' +
+                '<span>' + date.getHours() % 24 + ':00</span>' +
+                '</li>';
+        }).join('') +
+    elFooterLevel.querySelectorAll('li').forEach(function(el) {
         el.addEventListener('click', function(e) {
             loadData(parseInt(el.dataset.frame, 10));
             clearInterval(interval);
