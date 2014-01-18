@@ -104,13 +104,14 @@ function getDataCoords(x, y) {
 
 
 function Particle(x, y) {
-    this.reset(Math.floor(now + Math.random() * options.lifeTime));
+    this.offset = Math.random() * options.lifeTime;
+    this.reset(now); // TODO Date.now()
 }
 Particle.prototype.reset = function (lifeTime) {
     this.x = Math.floor(Math.random() * canvas.width);
     this.y = Math.floor(Math.random() * canvas.height);
     this.refreshCoords();
-    this.lifeTime = lifeTime || now + options.lifeTime;
+    this.lifeTime = now + options.lifeTime - now % options.lifeTime + this.offset; // TODO Date.now()
 };
 Particle.prototype.tick = function () {
     if (this.x > canvas.width || this.x < 0 ||
@@ -300,8 +301,6 @@ function loadData(frame) {
 
 
 d3.csv('data/frames.csv', function(err, rows) {
-
-    console.log(arguments)
 
     if (err) {
         triggerError('Couldn\'t load data');
