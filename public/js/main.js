@@ -43,6 +43,9 @@ var currentParticles = options.minParticles;
 
 var svg, projection, g, graticulePath;
 
+svg = d3.select("svg").append("g");
+g = svg.append('g');
+
 
 
 
@@ -277,7 +280,7 @@ function loadData(frame) {
 
         };
 
-        img.src = 'data/data-' + param + '_' + frame + '.png';
+        img.src = 'data/' + frame + '/' + param + '.png';
 
         return deferred.promise;
 
@@ -374,11 +377,8 @@ d3.csv('data/frames.csv', function(err, rows) {
 
 
 
-Q(function() {
 
-    return true;
-
-}).then(function loadMap() {
+function loadMap() {
 
     var deferred = Q.defer();
 
@@ -426,13 +426,6 @@ Q(function() {
         var graticule = d3.geo.graticule()
             .extent([[-90,0], [90, 90]])
             .step([5, 5]);
-
-        svg = d3.select("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .append("g")
-            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-        g = svg.append('g');
 
 
 
@@ -484,6 +477,17 @@ Q(function() {
     });
 
     return deferred.promise;
+
+}
+
+
+loadMap();
+
+
+
+Q(function() {
+
+    return true;
 
 }).then(function afterWorldLoaded() {
 
@@ -543,6 +547,7 @@ Q(function() {
 
         svg.attr('width', elContainer.clientWidth);
         svg.attr('height', elContainer.clientHeight);
+        svg.attr('transform', 'translate(' + elContainer.clientWidth / 2 + ',' + elContainer.clientHeight / 2 + ')');
 
         options.maxParticles = elContainer.clientWidth * 6;
 

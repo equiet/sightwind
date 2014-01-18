@@ -28,13 +28,14 @@ mkdir -p public/data
 
 echo "time,frame" > public/data/frames.csv
 
-for FRAME in {0..72}
+# for FRAME in {0..72}
+for FRAME in {0..0}
 do
 
 	TIME_FRAME=$(( TIME_RUN + FRAME*3600 ))
 
 	# VARS="wind10m_u,wind10m_v,topo,rain,temp2m,press[0],lat,lon"
-	VARS="wind10m_u,wind10m_v,temp2m"
+	VARS="wind10m_u,wind10m_v,temp2m,wind_u,wind_v,temp"
 	wget "http://dap.ometfn.net/eu12-pp_${RUN}_${FRAME}.nc.nc?$VARS" -O data_tmp.nc \
 		&& python nc-to-img.py $FRAME \
 		&& echo "${TIME_FRAME},${FRAME}" >> public/data/frames.csv \
