@@ -23,7 +23,7 @@ var options = {
         {start: 21, end: 28,        color: '247,40,109'},
         {start: 28, end: Infinity,        color: '255,52,65'},
     ],
-    criterion: 'temp2m',
+    criterion: 'temp',
     minParticles: 500,
     maxParticles: 5000,
     minFPS: 20
@@ -92,7 +92,8 @@ var DATA_CORNERS = {
 };
 
 var data,
-    dataParams = ['wind10m_u', 'wind10m_v', 'temp2m'];
+    // dataParams = ['wind10m_u', 'wind10m_v', 'temp2m'];
+    dataParams = ['wind_u', 'wind_v', 'temp'];
 
 
 
@@ -110,6 +111,11 @@ function getDataCoords(x, y) {
         Math.floor(y / canvas.height * DATA_HEIGHT),
     ];
 }
+
+function getValue(param, x, y) {
+    return data[param][y * DATA_WIDTH + x];
+}
+
 
 
 
@@ -138,11 +144,11 @@ Particle.prototype.refreshCoords = function () {
     this.dataCoordY = Math.floor(this.y / canvas.height * DATA_HEIGHT);
 };
 Particle.prototype.nextPositionX = function () {
-    this.x = this.x + data.wind10m_u[this.dataCoordY*DATA_WIDTH+this.dataCoordX] * timeDiff * options.speedFactor;
+    this.x = this.x + getValue('wind_u', this.dataCoordX, this.dataCoordY) * timeDiff * options.speedFactor;
     return this.x;
 };
 Particle.prototype.nextPositionY = function () {
-    this.y = this.y - data.wind10m_v[this.dataCoordY*DATA_WIDTH+this.dataCoordX] * timeDiff * options.speedFactor;
+    this.y = this.y - getValue('wind_v', this.dataCoordX, this.dataCoordY) * timeDiff * options.speedFactor;
     return this.y;
 };
 
@@ -246,8 +252,11 @@ function render() {
 }
 
 
+var currentFrame = 0,
+    currentLevel = 0;
 
-function loadData(frame) {
+
+function loadData() {
 
     var tmpData = {};
 
@@ -280,7 +289,7 @@ function loadData(frame) {
 
         };
 
-        img.src = 'data/' + frame + '/' + param + '.png';
+        img.src = 'data/' + currentFrame + '/' + param + '_' + currentLevel + '.png';
 
         return deferred.promise;
 
@@ -334,47 +343,55 @@ d3.csv('data/frames.csv', function(err, rows) {
 
     // date.toDateString().slice(4, 10)
 
-    var timeline = d3.select('.footer_timeline').attr('width', 500).attr('height', 60);
 
+    // Timeline
+
+    var timeline = d3.select('.footer_controls.is-frames').attr('width', 500).attr('height', 60);
     var points = timeline.selectAll('g')
         .data(rows)
         .enter();
-
     var tick = points.append('g')
         .attr('transform', function(d, i) { return 'translate(' + (i*10 + 20) + ',30)'; })
         .on('click', function(d, i) {
-            loadData(parseInt(i, 10));
+            currentFrame = i;
+            loadData();
             clearInterval(interval);
         });
     tick.append('circle')
         .attr('cx', 0)
         .attr('cy', 0)
-        .attr('r', 4);
+        .attr('r', 5);
     tick.append('text')
         .attr('dy', 20)
         .text(function(d, i) { return (new Date(parseInt(d.time, 10) * 1000).getHours() % 24) + ':00'; });
 
 
-    var elFooterLevel = document.querySelector('.footer_level');
-    elFooterLevel.innerHTML =
-        rows.map(function(row, index) {
-            var date = new Date(parseInt(row.time, 10) * 1000);
-            return '<li data-frame="' + row.frame + '" data-time="' + row.time + '" class="is-' + (date.getHours() % 4 === 2 ? 'up' : '') + ' is-' + (date.getHours() % 4 === 0 ? 'down' : '') + '">' +
-                '<span>' + date.getHours() % 24 + ':00</span>' +
-                '</li>';
-        }).join('') +
-    elFooterLevel.querySelectorAll('li').forEach(function(el) {
-        el.addEventListener('click', function(e) {
-            loadData(parseInt(el.dataset.frame, 10));
+    // Levels
+
+    var levels = d3.select('.footer_controls.is-levels').attr('width', 200).attr('height', 60);
+    var points = levels.selectAll('g')
+        .data(Array(39))
+        .enter();
+    var tick = points.append('g')
+        .attr('transform', function(d, i) { return 'translate(' + (i*10 + 20) + ',30)'; })
+        .on('click', function(d, i) {
+            currentLevel = i;
+            loadData();
             clearInterval(interval);
         });
-    });
+    tick.append('circle')
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .attr('r', 5);
+    tick.append('text')
+        .attr('dy', 20)
+        .text(function(d, i) { return i; });
 
 
     var hoursSinceLastUpdate = Math.round((Date.now() / 1000 - rows[0].time) / 3600),
         currentFrame = clamp(hoursSinceLastUpdate, 0, rows.length - 1);
 
-    loadData(currentFrame).then(function() {
+    loadData().then(function() {
 
         // runWebGL();
 
@@ -618,7 +635,7 @@ Q(function() {
         var scale = d3.scale.linear()
                         .domain([-14, 28])
                         .range([244,360]);
-        var temp = Math.round(data.temp2m[coords[1]*DATA_WIDTH+coords[0]]*10)/10;
+        var temp = Math.round(getValue('temp', coords[0], coords[1])*10)/10;
 
         elTemperatureIndicatorParent.style.color = 'rgb(' + tempToColor(temp) + ')';
         elTemperatureIndicator.innerHTML = (temp == Math.floor(temp)) ? temp + '.0' : temp;
@@ -626,14 +643,14 @@ Q(function() {
         elLatitudeIndicator.innerHTML = Math.round(proj[1] * 100) / 100;
         elLongitudeIndicator.innerHTML = Math.round(proj[0] * 100) / 100;
 
-        var u = data['wind10m_u'][coords[1]*DATA_WIDTH+coords[0]],
-            v = data['wind10m_v'][coords[1]*DATA_WIDTH+coords[0]],
+        var u = getValue('wind_u', coords[0], coords[1]),
+            v = getValue('wind_v', coords[0], coords[1]),
             speed = Math.round(Math.sqrt(u*u+v*v)*36)/10,
             dir = Math.round(360 - Math.atan2(v,u) / Math.PI * 180 - 90);
 
         var windScale = d3.scale.linear().domain([0,100]).range([0,55]);
 
-        elWindIndicatorParent.style.color = 'hsl(154,' + windScale(speed) + '%,51%)';
+        elWindIndicatorParent.style.color = 'hsl(' + Math.floor(154 - speed*2) + ',55%,51%)';
         elWindSpeedIndicator.innerHTML = (speed == Math.floor(speed)) ? speed + '.0' : speed;
         elWindDirectionIndicator.style.webkitTransform = 'rotate(' + dir + 'deg)';
         elWindDirectionIndicator.style.mozTransform = 'rotate(' + dir + 'deg)';

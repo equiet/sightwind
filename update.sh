@@ -29,7 +29,7 @@ mkdir -p public/data
 echo "time,frame" > public/data/frames.csv
 
 # for FRAME in {0..72}
-for FRAME in {0..0}
+for FRAME in {0..2}
 do
 
 	TIME_FRAME=$(( TIME_RUN + FRAME*3600 ))

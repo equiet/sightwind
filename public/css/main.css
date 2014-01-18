@@ -85,12 +85,12 @@ a {
 
 
 
-.footer_timeline {
+.footer_controls {
 	display: inline-block;
 }
-	.footer_timeline g {
+	.footer_controls g {
 	}
-	.footer_timeline circle {
+	.footer_controls circle {
 		fill: #fff;
 		-webkit-transform: scale(0.3);
 		-moz-transform: scale(0.3);
@@ -100,7 +100,7 @@ a {
 		-moz-transition: all 0.3s;
 		transition: all 0.3s;
 	}
-	.footer_timeline text {
+	.footer_controls text {
 		font: 10px 'Roboto', 'Helvetica', sans-serif;
 		fill: rgba(255,255,255,0.5);
 		text-anchor: middle;
@@ -108,29 +108,29 @@ a {
 		-moz-transition: all 0.3s;
 		transition: all 0.3s;
 	}
-	.footer_timeline g:nth-child(2n + 1) circle {
-		-webkit-transform: scale(0.55);
-		-moz-transform: scale(0.55);
-		transform: scale(0.55);
+	.footer_controls g:nth-child(2n + 1) circle {
+		-webkit-transform: scale(0.5);
+		-moz-transform: scale(0.5);
+		transform: scale(0.5);
 		opacity: 0.5;
 	}
-	.footer_timeline g:nth-child(4n + 1) circle {
-		-webkit-transform: scale(1);
-		-moz-transform: scale(1);
-		transform: scale(1);
+	.footer_controls g:nth-child(4n + 1) circle {
+		-webkit-transform: scale(0.7);
+		-moz-transform: scale(0.7);
+		transform: scale(0.7);
 		opacity: 1;
 	}
-	.footer_timeline g:hover {
+	.footer_controls g:hover {
 		cursor: pointer;
 	}
-		.footer_timeline g:hover circle {
+		.footer_controls g:hover circle {
 			fill: rgb(94, 217, 226);
-			-webkit-transform: scale(1);
-			-moz-transform: scale(1);
-			transform: scale(1);
+			-webkit-transform: scale(0.7);
+			-moz-transform: scale(0.7);
+			transform: scale(0.7);
 			opacity: 1;
 		}
-		.footer_timeline g:hover text {
+		.footer_controls g:hover text {
 			fill: rgb(94, 217, 226);
 		}
 
