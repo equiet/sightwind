@@ -29,6 +29,14 @@ var options = {
     minFPS: 20
 };
 
+var tempToColor = function(temp) {
+    for (var i = 0; i < options.colorScale.length; i++) {
+        if (temp < options.colorScale[i].end) {
+            return options.colorScale[i].color;
+        }
+    }
+}
+
 
 var currentParticles = options.minParticles;
 
@@ -105,20 +113,22 @@ function getDataCoords(x, y) {
 
 function Particle(x, y) {
     this.offset = Math.random() * options.lifeTime;
-    this.reset(now); // TODO Date.now()
+    this.reset(now);
 }
 Particle.prototype.reset = function (lifeTime) {
     this.x = Math.floor(Math.random() * canvas.width);
     this.y = Math.floor(Math.random() * canvas.height);
     this.refreshCoords();
-    this.lifeTime = now + options.lifeTime - now % options.lifeTime + this.offset; // TODO Date.now()
+    this.lifeTime = now + options.lifeTime - now % options.lifeTime + this.offset;
 };
 Particle.prototype.tick = function () {
     if (this.x > canvas.width || this.x < 0 ||
         this.y > canvas.height || this.y < 0 ||
         this.lifeTime < now) {
         this.reset();
+        return;
     }
+    this.refreshCoords();
 };
 Particle.prototype.refreshCoords = function () {
     this.dataCoordX = Math.floor(this.x / canvas.width * DATA_WIDTH);
@@ -165,7 +175,6 @@ function render() {
 
     for (var j = 0; j < currentParticles; j++) {
        particles[j].tick();
-       particles[j].refreshCoords();
     }
 
     // Fade old pixels
@@ -562,6 +571,17 @@ Q(function() {
         header = document.querySelector('.header'),
         elDetails = document.querySelector('.details');
 
+
+    // Cache elements
+    var elWindIndicatorParent = document.querySelector('.details_item.is-wind'),
+        elWindSpeedIndicator = document.querySelector('.data_wind10m_speed'),
+        elWindDirectionIndicator = document.querySelector('.data_wind10m_dir'),
+        elLatitudeIndicator = document.querySelector('.data_lat'),
+        elLongitudeIndicator = document.querySelector('.data_lon'),
+        elTemperatureIndicatorParent = document.querySelector('.details_item.is-temperature'),
+        elTemperatureIndicator = document.querySelector('.data_temp2m');
+
+
     container.addEventListener('mousemove', function(e) {
 
         if (!dataLoaded) {
@@ -575,23 +595,30 @@ Q(function() {
         ]);
         var coords = getDataCoords(e.pageX - offset.left, e.pageY - offset.top);
 
-        dataParams.forEach(function(value) {
-            if (document.querySelector('.data_' + value)) {
-                document.querySelector('.data_' + value).innerHTML = Math.round(data[value][coords[1]*DATA_WIDTH+coords[0]]*10)/10;
-            }
-        });
-        document.querySelector('.data_lat').innerHTML = Math.round(proj[1] * 100) / 100;
-        document.querySelector('.data_lon').innerHTML = Math.round(proj[0] * 100) / 100;
+
+        var scale = d3.scale.linear()
+                        .domain([-14, 28])
+                        .range([244,360]);
+        var temp = Math.round(data.temp2m[coords[1]*DATA_WIDTH+coords[0]]*10)/10;
+
+        elTemperatureIndicatorParent.style.color = 'rgb(' + tempToColor(temp) + ')';
+        elTemperatureIndicator.innerHTML = (temp == Math.floor(temp)) ? temp + '.0' : temp;
+
+        elLatitudeIndicator.innerHTML = Math.round(proj[1] * 100) / 100;
+        elLongitudeIndicator.innerHTML = Math.round(proj[0] * 100) / 100;
 
         var u = data['wind10m_u'][coords[1]*DATA_WIDTH+coords[0]],
             v = data['wind10m_v'][coords[1]*DATA_WIDTH+coords[0]],
             speed = Math.round(Math.sqrt(u*u+v*v)*36)/10,
             dir = Math.round(360 - Math.atan2(v,u) / Math.PI * 180 - 90);
 
-        document.querySelector('.data_wind10m_speed').innerHTML = speed;
-        document.querySelector('.data_wind10m_dir').style.webkitTransform = 'rotate(' + dir + 'deg)';
-        document.querySelector('.data_wind10m_dir').style.mozTransform = 'rotate(' + dir + 'deg)';
-        document.querySelector('.data_wind10m_dir').style.transform = 'rotate(' + dir + 'deg)';
+        var windScale = d3.scale.linear().domain([0,100]).range([0,55]);
+
+        elWindIndicatorParent.style.color = 'hsl(154,' + windScale(speed) + '%,51%)';
+        elWindSpeedIndicator.innerHTML = (speed == Math.floor(speed)) ? speed + '.0' : speed;
+        elWindDirectionIndicator.style.webkitTransform = 'rotate(' + dir + 'deg)';
+        elWindDirectionIndicator.style.mozTransform = 'rotate(' + dir + 'deg)';
+        elWindDirectionIndicator.style.transform = 'rotate(' + dir + 'deg)';
 
     });
 

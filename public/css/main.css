@@ -242,6 +242,9 @@ a {
 		color: #3EC68B;
 		width: 7em;
 	}
+		.data_wind10m_speed {
+			width: 2em;
+		}
 	.details_item.is-temperature {
 		color: #E54878;
 		width: 3.8em;
