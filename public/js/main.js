@@ -253,10 +253,15 @@ function render() {
 
 
 var currentFrame = 0,
-    currentLevel = 0;
+    currentLevel = -1;
 
 
-function loadData() {
+function loadData(frame, level) {
+
+    currentFrame = frame || currentFrame;
+    currentLevel = level || currentLevel;
+
+    console.log(arguments);
 
     var tmpData = {};
 
@@ -289,7 +294,16 @@ function loadData() {
 
         };
 
-        img.src = 'data/' + currentFrame + '/' + param + '_' + currentLevel + '.png';
+        if (currentLevel == -1) {
+            var standardName = param.replace('wind_u', 'wind10m_u')
+                                    .replace('wind_v', 'wind10m_v')
+                                     .replace('temp', 'temp2m');
+            img.src = 'data/' + currentFrame + '/' + standardName + '.png';
+        } else {
+            img.src = 'data/' + currentFrame + '/' + param + '_' + currentLevel + '.png';
+        }
+
+        console.log(currentFrame);
 
         return deferred.promise;
 
@@ -310,27 +324,26 @@ function loadData() {
         data = tmpData;
         dataLoaded = true;
 
-        document.querySelectorAll('.timeline li').forEach(function(el) {
-            el.classList.remove('is-active');
-        });
-        // document.querySelector('.footer_timeline g:nth-child(' + frame + ')').classList.add('is-active');
-
         document.querySelector('.loading').classList.remove('is-active');
 
     });
 }
 
 
-d3.csv('data/frames.csv', function(err, rows) {
+d3.csv('data/frames.csv', function(err, frames) {
 
     if (err) {
         triggerError('Couldn\'t load data');
         return;
     }
 
+    frames.forEach(function(frame) {
+        frame.time = parseInt(frame.time, 10);
+    });
+
     var interval;
 
-    document.querySelector('.last-update').innerHTML = new Date(rows[0].time * 1000).toLocaleString('en-US', {
+    document.querySelector('.last-update').innerHTML = new Date(frames[0].time * 1000).toLocaleString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -346,17 +359,69 @@ d3.csv('data/frames.csv', function(err, rows) {
 
     // Timeline
 
-    var timeline = d3.select('.footer_controls.is-frames').attr('width', 500).attr('height', 60);
-    var points = timeline.selectAll('g')
-        .data(rows)
+    var timeline = d3.select('.footer_controls.is-frames').attr('width', 760).attr('height', 60);
+
+    function showDay(time, start, end) {
+        var g = timeline.append('g').attr('class', 'day');
+        g.append('rect')
+            .attr('class', 'day_line')
+            .attr('x', start)
+            .attr('y', 12)
+            .attr('width', end - start)
+            .attr('height', 1)
+            .attr('fill', 'url(#dayGradient)');
+        g.append('rect')
+            .attr('class', 'day_text-bg')
+            .attr('x', (end - start) / 2 + start - 24)
+            .attr('y', 12)
+            .attr('width', 48)
+            .attr('height', 1)
+            .attr('fill', '#000');
+        g.append('text')
+            .text(new Date(time*1000).toDateString().slice(4, 10))
+            .attr('x', (end - start) / 2 + start)
+            .attr('y', 16);
+
+    }
+
+    var midnight = 0;
+    frames.forEach(function(d, i) {
+        if (new Date(d.time * 1000).getHours() % 24 === 0 || i === frames.length - 1) {
+            showDay(frames[midnight].time, midnight * 10 + 20, i * 10 + 20);
+            midnight = i;
+        }
+    });
+
+    var points = timeline.append('g').attr('class', 'ticks').selectAll('g')
+        .data(frames)
         .enter();
     var tick = points.append('g')
         .attr('transform', function(d, i) { return 'translate(' + (i*10 + 20) + ',30)'; })
+        .attr('class', function(d, i) {
+            var output = '';
+            if (new Date(d.time * 1000).getHours() % 24 === 0) {
+                output += ' is-midnight';
+            }
+            if (new Date(d.time * 1000).getHours() % 4 === 0) {
+                output += ' is-fourth';
+            }
+            if (new Date(d.time * 1000).getHours() % 2 === 0) {
+                output += ' is-even';
+            }
+            return output;
+        })
         .on('click', function(d, i) {
-            currentFrame = i;
-            loadData();
+            timeline.selectAll('.ticks g').classed('is-active', false);
+            timeline.select('.ticks g:nth-child(' + (i + 1) + ')').classed('is-active', true);
+            loadData(i, undefined);
             clearInterval(interval);
         });
+    tick.append('rect')
+        .attr('class', 'is-area')
+        .attr('x', -5)
+        .attr('y', -10)
+        .attr('width', 10)
+        .attr('height', 30);
     tick.append('circle')
         .attr('cx', 0)
         .attr('cy', 0)
@@ -368,17 +433,55 @@ d3.csv('data/frames.csv', function(err, rows) {
 
     // Levels
 
-    var levels = d3.select('.footer_controls.is-levels').attr('width', 200).attr('height', 60);
-    var points = levels.selectAll('g')
-        .data(Array(39))
-        .enter();
-    var tick = points.append('g')
-        .attr('transform', function(d, i) { return 'translate(' + (i*10 + 20) + ',30)'; })
-        .on('click', function(d, i) {
-            currentLevel = i;
-            loadData();
+    var levels = d3.select('.footer_controls.is-levels').attr('width', 500).attr('height', 60);
+
+    var ground = levels.append('g').append('g')
+        .attr('transform', 'translate(20,30)')
+        .attr('class', 'is-even is-fourth is-midnight')
+        .on('click', function() {
+            loadData(undefined, -1);
             clearInterval(interval);
         });
+    ground.append('rect')
+        .attr('class', 'is-area')
+        .attr('x', -5)
+        .attr('y', -10)
+        .attr('width', 10)
+        .attr('height', 30);
+    ground.append('circle')
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .attr('r', 5);
+    ground.append('text')
+        .attr('dy', 20)
+        .text('ground');
+
+    var points = levels.append('g')
+        .attr('transform', 'translate(60,0)')
+        .selectAll('g')
+        .data(new Array(39));
+    var tick = points.enter().append('g')
+        .attr('transform', function(d, i) { return 'translate(' + (i*10) + ',30)'; })
+        .attr('class', function(d, i) {
+            var output = '';
+            if (i % 4 === 0) {
+                output += ' is-fourth';
+            }
+            if (i % 2 === 0) {
+                output += ' is-even';
+            }
+            return output;
+        })
+        .on('click', function(d, i) {
+            loadData(undefined, i);
+            clearInterval(interval);
+        });
+    tick.append('rect')
+        .attr('class', 'is-area')
+        .attr('x', -5)
+        .attr('y', -10)
+        .attr('width', 10)
+        .attr('height', 30);
     tick.append('circle')
         .attr('cx', 0)
         .attr('cy', 0)
@@ -388,10 +491,10 @@ d3.csv('data/frames.csv', function(err, rows) {
         .text(function(d, i) { return i; });
 
 
-    var hoursSinceLastUpdate = Math.round((Date.now() / 1000 - rows[0].time) / 3600),
-        currentFrame = clamp(hoursSinceLastUpdate, 0, rows.length - 1);
+    var hoursSinceLastUpdate = Math.round((Date.now() / 1000 - frames[0].time) / 3600),
+        currentFrame = clamp(hoursSinceLastUpdate, 0, frames.length - 1);
 
-    loadData().then(function() {
+    loadData(currentFrame, -1).then(function() {
 
         // runWebGL();
 
@@ -650,7 +753,8 @@ Q(function() {
 
         var windScale = d3.scale.linear().domain([0,100]).range([0,55]);
 
-        elWindIndicatorParent.style.color = 'hsl(' + Math.floor(154 - speed*2) + ',55%,51%)';
+        // elWindIndicatorParent.style.color = 'hsl(' + Math.floor(154 - speed*2) + ',55%,51%)';
+        // elWindIndicatorParent.style.color = 'hsl(' + Math.floor(154 - speed*2) + ',55%,51%)';
         elWindSpeedIndicator.innerHTML = (speed == Math.floor(speed)) ? speed + '.0' : speed;
         elWindDirectionIndicator.style.webkitTransform = 'rotate(' + dir + 'deg)';
         elWindDirectionIndicator.style.mozTransform = 'rotate(' + dir + 'deg)';

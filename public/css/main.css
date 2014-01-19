@@ -88,8 +88,6 @@ a {
 .footer_controls {
 	display: inline-block;
 }
-	.footer_controls g {
-	}
 	.footer_controls circle {
 		fill: #fff;
 		-webkit-transform: scale(0.3);
@@ -100,126 +98,64 @@ a {
 		-moz-transition: all 0.3s;
 		transition: all 0.3s;
 	}
+		.footer_controls g.is-even circle {
+			-webkit-transform: scale(0.5);
+			-moz-transform: scale(0.5);
+			transform: scale(0.5);
+			opacity: 0.5;
+		}
+		.footer_controls g.is-midnight circle {
+			-webkit-transform: scale(0.8);
+			-moz-transform: scale(0.8);
+			transform: scale(0.8);
+			opacity: 1;
+		}
 	.footer_controls text {
 		font: 10px 'Roboto', 'Helvetica', sans-serif;
-		fill: rgba(255,255,255,0.5);
+		fill: none;
 		text-anchor: middle;
 		-webkit-transition: all 0.3s;
 		-moz-transition: all 0.3s;
 		transition: all 0.3s;
 	}
-	.footer_controls g:nth-child(2n + 1) circle {
-		-webkit-transform: scale(0.5);
-		-moz-transform: scale(0.5);
-		transform: scale(0.5);
-		opacity: 0.5;
-	}
-	.footer_controls g:nth-child(4n + 1) circle {
-		-webkit-transform: scale(0.7);
-		-moz-transform: scale(0.7);
-		transform: scale(0.7);
-		opacity: 1;
-	}
-	.footer_controls g:hover {
+		.footer_controls g.is-fourth text {
+			fill: rgba(255,255,255,0.5);
+		}
+	.footer_controls g g:hover,
+	.footer_controls g g.is-active {
 		cursor: pointer;
 	}
-		.footer_controls g:hover circle {
+		.footer_controls g g:hover circle,
+		.footer_controls g g.is-active circle {
 			fill: rgb(94, 217, 226);
-			-webkit-transform: scale(0.7);
-			-moz-transform: scale(0.7);
-			transform: scale(0.7);
+			-webkit-transform: scale(0.8);
+			-moz-transform: scale(0.8);
+			transform: scale(0.8);
 			opacity: 1;
 		}
-		.footer_controls g:hover text {
+		.footer_controls g.is-midnight:hover text {
 			fill: rgb(94, 217, 226);
 		}
-
-
-/*
-	.footer_timeline {
+	.footer_controls rect.is-area {
+		fill: none;
+		pointer-events: all;
 	}
-		.footer_timeline g {
-		}
-		.footer_timeline circle {
 
-		}
-		.footer_timeline text {
+.footer_controls.is-frames {
+	margin-right: 40px;
+}
 
-		}
-			color: rgba(255,255,255,0.5);
-			font-size: 10px;
-			cursor: pointer;
-		}
-			.footer_timeline li:before {
-				content: '';
-				position: absolute;
-				top: 8px;
-				left: 0;
-				width: 9px;
-				height: 9px;
-				border-radius: 100%;
-				background: #fff;
-				-webkit-transform: scale(0.3);
-				-moz-transform: scale(0.3);
-				transform: scale(0.3);
-				opacity: 0.2;
-				-webkit-transition: all 0.3s;
-				-moz-transition: all 0.3s;
-				transition: all 0.3s;
-			}
-		.footer_timeline span {
-			position: absolute;
-			display: none;
-			left: 4px;
-			-webkit-transform: translate(-50%, 0);
-			-moz-transform: translate(-50%, 0);
-			transform: translate(-50%, 0);
-		}
-		.footer_timeline li.is-down span {
-			display: inline-block;
-			-webkit-transform: translate(-50%,23px);
-			-moz-transform: translate(-50%,23px);
-			transform: translate(-50%,23px);
-		}
-		.footer_timeline li.is-down:before {
-			-webkit-transform: scale(0.55);
-			-moz-transform: scale(0.55);
-			transform: scale(0.55);
-		    opacity: 0.5;
-		}
-		.footer_timeline li.is-up span {
-			display: inline-block;
-			-webkit-transform: translate(-50%,-11px);
-			-moz-transform: translate(-50%,-11px);
-			transform: translate(-50%,-11px);
-		}
-		.footer_timeline li.is-up:before {
-			-webkit-transform: scale(0.55);
-			-moz-transform: scale(0.55);
-			transform: scale(0.55);
-		    opacity: 0.5;
-		}
-		.footer_timeline li.is-midnight span {
-			color: #fff;
-		}
-		.footer_timeline li.is-midnight:before {
-			-webkit-transform: scale(1);
-			-moz-transform: scale(1);
-			transform: scale(1);
-		    opacity: 1;
-		}
-		.footer_timeline li:hover,
-		.footer_timeline li.is-active {
-			color: rgb(94, 217, 226);
-		}
-		.footer_timeline li:hover:before,
-		.footer_timeline li.is-active:before {
-			background: rgb(94, 217, 226);
-			-webkit-transform: scale(1);
-			-moz-transform: scale(1);
-			transform: scale(1);
-		    opacity: 1;
-		}*/
+.day {
+}
+	.day_text-bg {
+		fill: #0C171F;
+	}
+	.day text {
+		font-weight: 700;
+		fill: #fff;
+		text-anchor: middle;
+	}
+
 
 
 .loading,

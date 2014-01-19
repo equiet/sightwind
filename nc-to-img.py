@@ -25,6 +25,9 @@ params = ['wind10m_u', 'wind10m_v', 'temp2m']
 
 for var in params:
 
+  if var not in data.variables:
+    continue
+
   if not os.path.exists('public/data/' + frame):
     os.makedirs('public/data/' + frame)
 
@@ -59,6 +62,9 @@ for level in range(0, levels):
   params = ['wind_u', 'wind_v', 'temp']
 
   for var in params:
+
+    if var not in data.variables:
+      continue
 
     if not os.path.exists('public/data/' + frame):
       os.makedirs('public/data/' + frame)
