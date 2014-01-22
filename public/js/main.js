@@ -38,6 +38,104 @@ var tempToColor = function(temp) {
 };
 
 
+
+
+function DataLoader() {
+
+    this.frame = 0;
+    this.level = -1;
+    this.ready = false;
+    this.data = [];
+
+    this.WIDTH = 495;
+    this.HEIGHT = 309;
+
+    this.CORNERS = {
+        topLeft: [-45.6597900390625, 55.27363204956055],
+        topRight: [53.409786224365234, 55.27363204956055],
+        bottomLeft: [-24.60595703125, 26.117345809936523],
+        bottomRight: [32.1064453125, 26.117345809936523]
+    };
+
+    this.params = ['wind_u', 'wind_v', 'temp'];
+
+}
+DataLoader.prototype.setFrame = function(frame) {
+    this.frame = frame;
+    return this;
+};
+DataLoader.prototype.setLevel = function(level) {
+    this.level = level;
+    return this;
+};
+DataLoader.prototype.get = function(param, x, y) {
+    return this.data[param][y * this.WIDTH + x];
+};
+DataLoader.prototype.load = function() {
+
+    var tmpData = {},
+        self = this;
+
+    document.querySelector('.loading').classList.add('is-active');
+
+
+    /**
+     * Promise for all images
+     */
+
+    return Q.all(dataLoader.params.map(function(param) {
+
+        var deferred = Q.defer(),
+            loadCanvas = document.createElement('canvas'),
+            loadCtx = loadCanvas.getContext('2d'),
+            img = new Image();
+
+        loadCanvas.width = self.WIDTH;
+        loadCanvas.height = self.HEIGHT;
+
+        img.onload = function() {
+
+            loadCtx.drawImage(img, 0, 0);
+
+            var imageData = loadCtx.getImageData(0,0, loadCanvas.width, loadCanvas.height);
+            tmpData[param] = new Float32Array(imageData.data.buffer);
+
+            img = null;
+
+            deferred.resolve();
+
+        };
+
+        if (self.level == -1) {
+            var standardName = param.replace('wind_u', 'wind10m_u')
+                                    .replace('wind_v', 'wind10m_v')
+                                    .replace('temp', 'temp2m');
+            img.src = 'data/' + self.frame + '/' + standardName + '.png';
+        } else {
+            img.src = 'data/' + self.frame + '/' + param + '_' + this.level + '.png';
+        }
+
+        return deferred.promise;
+
+    })).then(function() {
+
+        console.log(tmpData);
+        self.data = tmpData;
+        self.ready = true;
+
+        document.querySelector('.loading').classList.remove('is-active');
+
+    });
+
+};
+
+var dataLoader = new DataLoader();
+
+
+
+
+
+
 var currentParticles = options.minParticles;
 
 
@@ -57,12 +155,6 @@ g = svg.append('g');
 //     .precision(.1);
 
 
-var dataLoaded = false;
-
-
-
-
-// var projection = d3.geo.mercator();
 
 
 
@@ -81,19 +173,6 @@ var canvas,
     heatCtx,
     scaleGradient;
 
-var DATA_WIDTH = 495,
-    DATA_HEIGHT = 309;
-
-var DATA_CORNERS = {
-    topLeft: [-45.6597900390625, 55.27363204956055],
-    topRight: [53.409786224365234, 55.27363204956055],
-    bottomLeft: [-24.60595703125, 26.117345809936523],
-    bottomRight: [32.1064453125, 26.117345809936523]
-};
-
-var data,
-    // dataParams = ['wind10m_u', 'wind10m_v', 'temp2m'];
-    dataParams = ['wind_u', 'wind_v', 'temp'];
 
 
 
@@ -105,18 +184,6 @@ function clamp(val, min, max) {
 }
 
 
-function getDataCoords(x, y) {
-    return [
-        Math.floor(x / canvas.width * DATA_WIDTH),
-        Math.floor(y / canvas.height * DATA_HEIGHT),
-    ];
-}
-
-function getValue(param, x, y) {
-    return data[param][y * DATA_WIDTH + x];
-}
-
-
 
 
 
@@ -124,7 +191,7 @@ function Particle(x, y) {
     this.offset = Math.random() * options.lifeTime;
     this.reset(now);
 }
-Particle.prototype.reset = function (lifeTime) {
+Particle.prototype.reset = function () {
     this.x = Math.floor(Math.random() * canvas.width);
     this.y = Math.floor(Math.random() * canvas.height);
     this.refreshCoords();
@@ -140,15 +207,15 @@ Particle.prototype.tick = function () {
     this.refreshCoords();
 };
 Particle.prototype.refreshCoords = function () {
-    this.dataCoordX = Math.floor(this.x / canvas.width * DATA_WIDTH);
-    this.dataCoordY = Math.floor(this.y / canvas.height * DATA_HEIGHT);
+    this.dataCoordX = Math.floor(this.x / canvas.width * dataLoader.WIDTH);
+    this.dataCoordY = Math.floor(this.y / canvas.height * dataLoader.HEIGHT);
 };
 Particle.prototype.nextPositionX = function () {
-    this.x = this.x + getValue('wind_u', this.dataCoordX, this.dataCoordY) * timeDiff * options.speedFactor;
+    this.x = this.x + dataLoader.get('wind_u', this.dataCoordX, this.dataCoordY) * timeDiff * options.speedFactor;
     return this.x;
 };
 Particle.prototype.nextPositionY = function () {
-    this.y = this.y - getValue('wind_v', this.dataCoordX, this.dataCoordY) * timeDiff * options.speedFactor;
+    this.y = this.y - dataLoader.get('wind_v', this.dataCoordX, this.dataCoordY) * timeDiff * options.speedFactor;
     return this.y;
 };
 
@@ -171,7 +238,7 @@ function render() {
 
     requestAnimationFrame(render);
 
-    if (!data) {
+    if (!dataLoader.ready) {
         return;
     }
 
@@ -203,7 +270,7 @@ function render() {
             ctx.strokeStyle = 'rgba(' + options.colorScale[i].color + ',' + options.colorAlpha + ')';
 
             for (var j = 0; j < currentParticles; j++) {
-                var criterion = data[options.criterion][particles[j].dataCoordY*DATA_WIDTH+particles[j].dataCoordX];
+                var criterion = dataLoader.get(options.criterion, particles[j].dataCoordX, particles[j].dataCoordY);
                 if (options.colorScale[i].start <= criterion && criterion < options.colorScale[i].end) {
                     ctx.moveTo(particles[j].x, particles[j].y);
                     ctx.lineTo(particles[j].nextPositionX(), particles[j].nextPositionY());
@@ -254,79 +321,6 @@ function render() {
 
 }
 
-
-var currentFrame = 0,
-    currentLevel = -1;
-
-
-function loadData(frame, level) {
-
-    currentFrame = frame || currentFrame;
-    currentLevel = level || currentLevel;
-
-    var tmpData = {};
-
-    document.querySelector('.loading').classList.add('is-active');
-
-    /**
-     * Load image
-     */
-
-    function loadDataImage(param) {
-
-        var deferred = Q.defer(),
-            loadCanvas = document.createElement('canvas'),
-            loadCtx = loadCanvas.getContext('2d'),
-            img = new Image();
-
-        loadCanvas.width = DATA_WIDTH;
-        loadCanvas.height = DATA_HEIGHT;
-
-        img.onload = function() {
-
-            loadCtx.drawImage(img, 0, 0);
-
-            var imageData = loadCtx.getImageData(0,0, loadCanvas.width, loadCanvas.height);
-            tmpData[param] = new Float32Array(imageData.data.buffer);
-
-            img = null;
-
-            deferred.resolve();
-
-        };
-
-        if (currentLevel == -1) {
-            var standardName = param.replace('wind_u', 'wind10m_u')
-                                    .replace('wind_v', 'wind10m_v')
-                                     .replace('temp', 'temp2m');
-            img.src = 'data/' + currentFrame + '/' + standardName + '.png';
-        } else {
-            img.src = 'data/' + currentFrame + '/' + param + '_' + currentLevel + '.png';
-        }
-
-        return deferred.promise;
-
-    }
-
-
-
-    /**
-     * Promise for all images
-     */
-
-    return Q.all(dataParams.map(function(param) {
-
-        return loadDataImage(param);
-
-    })).then(function() {
-
-        data = tmpData;
-        dataLoaded = true;
-
-        document.querySelector('.loading').classList.remove('is-active');
-
-    });
-}
 
 
 d3.csv('data/frames.csv', function(err, frames) {
@@ -406,7 +400,7 @@ d3.csv('data/frames.csv', function(err, frames) {
         .on('click', function(d, i) {
             timeline.selectAll('.ticks g').classed('is-active', false);
             timeline.select('.ticks g:nth-child(' + (i + 1) + ')').classed('is-active', true);
-            loadData(i, undefined);
+            dataLoader.setFrame(i).load();
             clearInterval(interval);
         });
     tick.append('rect')
@@ -432,7 +426,7 @@ d3.csv('data/frames.csv', function(err, frames) {
         .attr('transform', 'translate(20,30)')
         .attr('class', 'is-even is-fourth is-midnight')
         .on('click', function() {
-            loadData(undefined, -1);
+            dataLoader.setLevel(-1).load();
             clearInterval(interval);
         });
     ground.append('rect')
@@ -462,7 +456,7 @@ d3.csv('data/frames.csv', function(err, frames) {
         .on('click', function(d, i) {
             points.selectAll('g').classed('is-active', false);
             points.select('g:nth-child(' + (i + 1) + ')').classed('is-active', true);
-            loadData(undefined, i);
+            dataLoader.setLevel(i).load();
             clearInterval(interval);
         });
     tick.append('rect')
@@ -480,14 +474,14 @@ d3.csv('data/frames.csv', function(err, frames) {
         .text(function(d, i) { return i; });
 
 
-    var hoursSinceLastUpdate = Math.round((Date.now() / 1000 - frames[0].time) / 3600),
-        currentFrame = clamp(hoursSinceLastUpdate, 0, frames.length - 1);
+    var hoursSinceLastUpdate = Math.round((Date.now() / 1000 - frames[0].time) / 3600);
+    dataLoader.setFrame(clamp(hoursSinceLastUpdate, 0, frames.length - 1));
 
-    loadData(currentFrame, -1).then(function() {
+    dataLoader.load().then(function() {
 
         // var frame = 0;
         // interval = setInterval(function() {
-        //     loadData(++frame % 72);
+        //     dataLoader.setFrame(++frame % 72).load();
         // }, 1000);
 
         elContainer.classList.add('is-active');
@@ -514,9 +508,9 @@ function loadMap() {
             return;
         }
 
-
+        // TODO: Remove?
         var mainAspectRatio = elMain.clientWidth / elMain.clientHeight,
-            containerAspectRatio = DATA_WIDTH / DATA_HEIGHT;
+            containerAspectRatio = dataLoader.WIDTH / dataLoader.HEIGHT;
 
         if (mainAspectRatio > containerAspectRatio) {
             elContainer.style.width = (elMain.clientHeight * containerAspectRatio) + 'px';
@@ -554,8 +548,8 @@ function loadMap() {
          * Adjust scale
          */
 
-        var projTopLeft = projection(DATA_CORNERS.topLeft),
-            projBottomRight = projection(DATA_CORNERS.bottomRight),
+        var projTopLeft = projection(dataLoader.CORNERS.topLeft),
+            projBottomRight = projection(dataLoader.CORNERS.bottomRight),
             upscale = elContainer.clientWidth / (projBottomRight[0] - projTopLeft[0]);
         projection
             .scale(width * upscale)
@@ -570,11 +564,11 @@ function loadMap() {
         g.append('polyline')
             .attr('class', 'dataframe')
             .attr('points', [
-                projection(DATA_CORNERS.topLeft),
-                projection(DATA_CORNERS.topRight),
-                projection(DATA_CORNERS.bottomRight),
-                projection(DATA_CORNERS.bottomLeft),
-                projection(DATA_CORNERS.topLeft)
+                projection(dataLoader.CORNERS.topLeft),
+                projection(dataLoader.CORNERS.topRight),
+                projection(dataLoader.CORNERS.bottomRight),
+                projection(dataLoader.CORNERS.bottomLeft),
+                projection(dataLoader.CORNERS.topLeft)
             ].map(function (item) { return item.toString(); }).join(' '));
 
 
@@ -653,7 +647,7 @@ Q(function() {
     function resizeContainer() {
 
         var mainAspectRatio = elMain.clientWidth / elMain.clientHeight,
-            containerAspectRatio = DATA_WIDTH / DATA_HEIGHT;
+            containerAspectRatio = dataLoader.WIDTH / dataLoader.HEIGHT;
 
         if (mainAspectRatio > containerAspectRatio) {
             elContainer.style.width = (elMain.clientHeight * containerAspectRatio) + 'px';
@@ -699,7 +693,7 @@ Q(function() {
 
     container.addEventListener('mousemove', function(e) {
 
-        if (!dataLoaded) {
+        if (!dataLoader.ready) {
             return;
         }
 
@@ -708,13 +702,16 @@ Q(function() {
             e.pageX - offset.left - elContainer.clientWidth / 2,
             e.pageY - offset.top - elContainer.clientHeight / 2
         ]);
-        var coords = getDataCoords(e.pageX - offset.left, e.pageY - offset.top);
+        var coords = [
+            Math.floor((e.pageX - offset.left) / canvas.width * dataLoader.WIDTH),
+            Math.floor((e.pageY - offset.top) / canvas.height * dataLoader.HEIGHT),
+        ];
 
 
         var scale = d3.scale.linear()
                         .domain([-14, 28])
                         .range([244,360]);
-        var temp = Math.round(getValue('temp', coords[0], coords[1])*10)/10;
+        var temp = Math.round(dataLoader.get('temp', coords[0], coords[1])*10)/10;
 
         elTemperatureIndicatorParent.style.color = 'rgb(' + tempToColor(temp) + ')';
         elTemperatureIndicator.innerHTML = (temp == Math.floor(temp)) ? temp + '.0' : temp;
@@ -722,8 +719,8 @@ Q(function() {
         elLatitudeIndicator.innerHTML = Math.round(proj[1] * 100) / 100;
         elLongitudeIndicator.innerHTML = Math.round(proj[0] * 100) / 100;
 
-        var u = getValue('wind_u', coords[0], coords[1]),
-            v = getValue('wind_v', coords[0], coords[1]),
+        var u = dataLoader.get('wind_u', coords[0], coords[1]),
+            v = dataLoader.get('wind_v', coords[0], coords[1]),
             speed = Math.round(Math.sqrt(u*u+v*v)*36)/10,
             dir = Math.round(360 - Math.atan2(v,u) / Math.PI * 180 - 90);
 
