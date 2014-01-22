@@ -183,6 +183,9 @@ function render() {
     bufferCtx.globalAlpha = options.globalAlpha;
 
     for (var j = 0; j < currentParticles; j++) {
+        if (particles[j] === undefined) {
+            particles[j] = new Particle();
+        }
        particles[j].tick();
     }
 
@@ -261,8 +264,6 @@ function loadData(frame, level) {
     currentFrame = frame || currentFrame;
     currentLevel = level || currentLevel;
 
-    console.log(arguments);
-
     var tmpData = {};
 
     document.querySelector('.loading').classList.add('is-active');
@@ -302,8 +303,6 @@ function loadData(frame, level) {
         } else {
             img.src = 'data/' + currentFrame + '/' + param + '_' + currentLevel + '.png';
         }
-
-        console.log(currentFrame);
 
         return deferred.promise;
 
@@ -397,18 +396,12 @@ d3.csv('data/frames.csv', function(err, frames) {
         .enter();
     var tick = points.append('g')
         .attr('transform', function(d, i) { return 'translate(' + (i*10 + 20) + ',30)'; })
-        .attr('class', function(d, i) {
-            var output = '';
-            if (new Date(d.time * 1000).getHours() % 24 === 0) {
-                output += ' is-midnight';
-            }
-            if (new Date(d.time * 1000).getHours() % 4 === 0) {
-                output += ' is-fourth';
-            }
-            if (new Date(d.time * 1000).getHours() % 2 === 0) {
-                output += ' is-even';
-            }
-            return output;
+        .each(function(d, i) {
+            var $this = d3.select(this),
+                hours = new Date(d.time * 1000).getHours();
+            $this.classed('is-midnight', hours % 24 === 0);
+            $this.classed('is-fourth', hours % 4 === 0);
+            $this.classed('is-even', hours % 2 === 0);
         })
         .on('click', function(d, i) {
             timeline.selectAll('.ticks g').classed('is-active', false);
@@ -462,17 +455,13 @@ d3.csv('data/frames.csv', function(err, frames) {
         .data(new Array(39));
     var tick = points.enter().append('g')
         .attr('transform', function(d, i) { return 'translate(' + (i*10) + ',30)'; })
-        .attr('class', function(d, i) {
-            var output = '';
-            if (i % 4 === 0) {
-                output += ' is-fourth';
-            }
-            if (i % 2 === 0) {
-                output += ' is-even';
-            }
-            return output;
+        .each(function(d, i) {
+            d3.select(this).classed('is-fourth', i%4 === 0);
+            d3.select(this).classed('is-even', i%2 === 0);
         })
         .on('click', function(d, i) {
+            points.selectAll('g').classed('is-active', false);
+            points.select('g:nth-child(' + (i + 1) + ')').classed('is-active', true);
             loadData(undefined, i);
             clearInterval(interval);
         });
@@ -689,17 +678,6 @@ Q(function() {
     resizeContainer();
     window.addEventListener('resize', resizeContainer);
 
-
-
-
-
-
-
-
-    // Create particles
-    for (var i = 0; i < options.maxParticles; i++) {
-        particles[i] = new Particle();
-    }
 
 
     // Start rendering
