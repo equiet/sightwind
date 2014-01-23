@@ -37,6 +37,7 @@ var tempToColor = function(temp) {
     }
 };
 
+var timeline, levels;
 
 
 
@@ -45,7 +46,7 @@ function DataLoader() {
     this.frame = 0;
     this.level = -1;
     this.ready = false;
-    this.data = [];
+    this.data = undefined;
 
     this.WIDTH = 495;
     this.HEIGHT = 309;
@@ -112,18 +113,22 @@ DataLoader.prototype.load = function() {
                                     .replace('temp', 'temp2m');
             img.src = 'data/' + self.frame + '/' + standardName + '.png';
         } else {
-            img.src = 'data/' + self.frame + '/' + param + '_' + this.level + '.png';
+            img.src = 'data/' + self.frame + '/' + param + '_' + self.level + '.png';
         }
 
         return deferred.promise;
 
     })).then(function() {
 
-        console.log(tmpData);
         self.data = tmpData;
-        self.ready = true;
 
         document.querySelector('.loading').classList.remove('is-active');
+
+        timeline.selectAll('.timeline_item').classed('is-active', false);
+        timeline.select('.timeline_item.is-' + self.frame).classed('is-active', true);
+
+        levels.selectAll('.levels_item').classed('is-active', false);
+        levels.select('.levels_item.is-' + self.level).classed('is-active', true);
 
     });
 
@@ -238,7 +243,7 @@ function render() {
 
     requestAnimationFrame(render);
 
-    if (!dataLoader.ready) {
+    if (!dataLoader.data) {
         return;
     }
 
@@ -352,7 +357,7 @@ d3.csv('data/frames.csv', function(err, frames) {
 
     // Timeline
 
-    var timeline = d3.select('.footer_controls.is-frames').attr('width', 760).attr('height', 60);
+    timeline = d3.select('.footer_controls.is-frames').attr('width', 760).attr('height', 60);
 
     function showDay(time, start, end) {
         var g = timeline.append('g').attr('class', 'day');
@@ -390,16 +395,16 @@ d3.csv('data/frames.csv', function(err, frames) {
         .enter();
     var tick = points.append('g')
         .attr('transform', function(d, i) { return 'translate(' + (i*10 + 20) + ',30)'; })
+        .attr('class', 'timeline_item')
         .each(function(d, i) {
             var $this = d3.select(this),
                 hours = new Date(d.time * 1000).getHours();
             $this.classed('is-midnight', hours % 24 === 0);
-            $this.classed('is-fourth', hours % 4 === 0);
+            $this.classed('is-fourth',  hours % 4 === 0);
             $this.classed('is-even', hours % 2 === 0);
+            $this.classed('is-' + i, true);
         })
         .on('click', function(d, i) {
-            timeline.selectAll('.ticks g').classed('is-active', false);
-            timeline.select('.ticks g:nth-child(' + (i + 1) + ')').classed('is-active', true);
             dataLoader.setFrame(i).load();
             clearInterval(interval);
         });
@@ -420,11 +425,11 @@ d3.csv('data/frames.csv', function(err, frames) {
 
     // Levels
 
-    var levels = d3.select('.footer_controls.is-levels').attr('width', 500).attr('height', 60);
+    levels = d3.select('.footer_controls.is-levels').attr('width', 500).attr('height', 60);
 
     var ground = levels.append('g').append('g')
         .attr('transform', 'translate(20,30)')
-        .attr('class', 'is-even is-fourth is-midnight')
+        .attr('class', 'is-even is-fourth is-midnight levels_item is--1')
         .on('click', function() {
             dataLoader.setLevel(-1).load();
             clearInterval(interval);
@@ -449,13 +454,13 @@ d3.csv('data/frames.csv', function(err, frames) {
         .data(new Array(39));
     var tick = points.enter().append('g')
         .attr('transform', function(d, i) { return 'translate(' + (i*10) + ',30)'; })
+        .attr('class', 'levels_item')
         .each(function(d, i) {
+            d3.select(this).classed('is-' + i, true);
             d3.select(this).classed('is-fourth', i%4 === 0);
             d3.select(this).classed('is-even', i%2 === 0);
         })
         .on('click', function(d, i) {
-            points.selectAll('g').classed('is-active', false);
-            points.select('g:nth-child(' + (i + 1) + ')').classed('is-active', true);
             dataLoader.setLevel(i).load();
             clearInterval(interval);
         });
@@ -693,7 +698,7 @@ Q(function() {
 
     container.addEventListener('mousemove', function(e) {
 
-        if (!dataLoader.ready) {
+        if (!dataLoader.data) {
             return;
         }
 
@@ -740,6 +745,26 @@ Q(function() {
     });
     container.addEventListener('mouseout', function(e) {
         elDetails.classList.remove('is-active');
+    });
+
+
+    document.addEventListener('keyup', function(e) {
+        var increment = e.shiftKey ? 4 : 1;
+        switch (e.keyCode) {
+            case 38: // up
+                dataLoader.setLevel(dataLoader.level + increment);
+                break;
+            case 40: // down
+                dataLoader.setLevel(dataLoader.level - increment);
+                break;
+            case 39: // right
+                dataLoader.setFrame(dataLoader.frame + increment);
+                break;
+            case 37: // left
+                dataLoader.setFrame(dataLoader.frame - increment);
+                break;
+        }
+        dataLoader.load();
     });
 
 
