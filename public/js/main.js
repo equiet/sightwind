@@ -144,7 +144,7 @@ var dataLoader = new DataLoader();
 var currentParticles = options.minParticles;
 
 
-var svg, projection, g, graticulePath;
+var svg, projection, g, path, graticulePath;
 
 svg = d3.select('#map').append('g');
 g = svg.append('g');
@@ -495,7 +495,7 @@ d3.csv('data/frames.csv', function(err, frames) {
 
 });
 
-
+var originalWidth, originalHeight;
 
 
 function loadMap() {
@@ -513,21 +513,11 @@ function loadMap() {
             return;
         }
 
-        // TODO: Remove?
-        var mainAspectRatio = elMain.clientWidth / elMain.clientHeight,
-            containerAspectRatio = dataLoader.WIDTH / dataLoader.HEIGHT;
-
-        if (mainAspectRatio > containerAspectRatio) {
-            elContainer.style.width = (elMain.clientHeight * containerAspectRatio) + 'px';
-            elContainer.style.height = elMain.clientHeight + 'px';
-        } else {
-            elContainer.style.width = elMain.clientWidth + 'px';
-            elContainer.style.height = (elMain.clientWidth / containerAspectRatio) + 'px';
-        }
-
-
         var width = elContainer.clientWidth,
             height = elContainer.clientHeight;
+
+        originalWidth = width;
+        originalHeight = height;
 
         var grid_center = {lat: 47.5, lon: 4};
 
@@ -540,7 +530,7 @@ function loadMap() {
             // .translate([width/2, height/2])
             .precision(0.1);
 
-        var path = d3.geo.path()
+        path = d3.geo.path()
             .projection(projection);
 
         var graticule = d3.geo.graticule()
@@ -609,7 +599,7 @@ Q(function() {
 
     return true;
 
-}).then(function afterWorldLoaded() {
+}).then(function() {
 
     /**
      * 1. Hide loading
@@ -667,7 +657,9 @@ Q(function() {
 
         svg.attr('width', elContainer.clientWidth);
         svg.attr('height', elContainer.clientHeight);
-        svg.attr('transform', 'translate(' + elContainer.clientWidth / 2 + ',' + elContainer.clientHeight / 2 + ')');
+
+        var scale = elContainer.clientWidth / (originalWidth || elContainer.clientWidth);
+        svg.attr('transform', 'translate(' + elContainer.clientWidth / 2 + ',' + elContainer.clientHeight / 2 + ') scale(' + scale + ') ');
 
         options.maxParticles = elContainer.clientWidth * 6;
 
