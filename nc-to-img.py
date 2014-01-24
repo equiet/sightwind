@@ -57,7 +57,8 @@ for var in params:
 ### Elevation data
 
 
-for level in range(0, levels):
+# for level in range(0, levels):
+if False:
 
   params = ['wind_u', 'wind_v', 'temp']
 
