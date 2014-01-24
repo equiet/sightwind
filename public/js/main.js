@@ -48,6 +48,9 @@ function DataLoader() {
     this.ready = false;
     this.data = undefined;
 
+    this.frameCount = 0;
+    this.levelCount = 39;
+
     this.WIDTH = 495;
     this.HEIGHT = 309;
 
@@ -62,11 +65,11 @@ function DataLoader() {
 
 }
 DataLoader.prototype.setFrame = function(frame) {
-    this.frame = frame;
+    this.frame = clamp(frame, 0, this.frameCount - 1);
     return this;
 };
 DataLoader.prototype.setLevel = function(level) {
-    this.level = level;
+    this.level = clamp(level, -1, this.levelCount - 1);
     return this;
 };
 DataLoader.prototype.get = function(param, x, y) {
@@ -335,6 +338,8 @@ d3.csv('data/frames.csv', function(err, frames) {
         return;
     }
 
+    dataLoader.frameCount = frames.length;
+
     frames.forEach(function(frame) {
         frame.time = parseInt(frame.time, 10);
     });
@@ -349,10 +354,6 @@ d3.csv('data/frames.csv', function(err, frames) {
         minute: 'numeric',
         hour12: false
     });
-
-    NodeList.prototype.forEach = Array.prototype.forEach;
-
-    // date.toDateString().slice(4, 10)
 
 
     // Timeline
