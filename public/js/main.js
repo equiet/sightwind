@@ -38,6 +38,7 @@ var tempToColor = function(temp) {
 };
 
 var timeline, levels;
+var originalWidth, originalHeight;
 
 
 
@@ -49,7 +50,8 @@ function DataLoader() {
     this.data = undefined;
 
     this.frameCount = 0;
-    this.levelCount = 39;
+    this.levelCount = 0;
+    // this.levelCount = 39; // TODO
 
     this.WIDTH = 495;
     this.HEIGHT = 309;
@@ -175,10 +177,6 @@ var canvas,
     ctx,
     buffer,
     bufferCtx,
-    tempCanvas,
-    tempCtx,
-    heatCanvas,
-    heatCtx,
     scaleGradient;
 
 
@@ -338,13 +336,11 @@ d3.csv('data/frames.csv', function(err, frames) {
         return;
     }
 
-    dataLoader.frameCount = frames.length;
-
     frames.forEach(function(frame) {
         frame.time = parseInt(frame.time, 10);
     });
 
-    var interval;
+    dataLoader.frameCount = frames.length;
 
     document.querySelector('.last-update').innerHTML = new Date(frames[0].time * 1000).toLocaleString('en-US', {
         year: 'numeric',
@@ -391,10 +387,10 @@ d3.csv('data/frames.csv', function(err, frames) {
         }
     });
 
-    var points = timeline.append('g').attr('class', 'ticks').selectAll('g')
+    var timelinePoints = timeline.append('g').attr('class', 'ticks').selectAll('g')
         .data(frames)
         .enter();
-    var tick = points.append('g')
+    var timelineTick = timelinePoints.append('g')
         .attr('transform', function(d, i) { return 'translate(' + (i*10 + 20) + ',30)'; })
         .attr('class', 'timeline_item')
         .each(function(d, i) {
@@ -407,33 +403,32 @@ d3.csv('data/frames.csv', function(err, frames) {
         })
         .on('click', function(d, i) {
             dataLoader.setFrame(i).load();
-            clearInterval(interval);
         });
-    tick.append('rect')
+    timelineTick.append('rect')
         .attr('class', 'is-area')
         .attr('x', -5)
         .attr('y', -10)
         .attr('width', 10)
         .attr('height', 30);
-    tick.append('circle')
+    timelineTick.append('circle')
         .attr('cx', 0)
         .attr('cy', 0)
         .attr('r', 5);
-    tick.append('text')
+    timelineTick.append('text')
         .attr('dy', 20)
         .text(function(d, i) { return (new Date(parseInt(d.time, 10) * 1000).getHours() % 24) + ':00'; });
 
 
     // Levels
 
-    levels = d3.select('.footer_controls.is-levels').attr('width', 500).attr('height', 60);
+    levels = d3.select('.footer_controls.is-levels').attr('width', 40).attr('height', 60);
+    // levels = d3.select('.footer_controls.is-levels').attr('width', 500).attr('height', 60); TODO
 
     var ground = levels.append('g').append('g')
         .attr('transform', 'translate(20,30)')
         .attr('class', 'is-even is-fourth is-midnight levels_item is--1')
         .on('click', function() {
             dataLoader.setLevel(-1).load();
-            clearInterval(interval);
         });
     ground.append('rect')
         .attr('class', 'is-area')
@@ -449,11 +444,12 @@ d3.csv('data/frames.csv', function(err, frames) {
         .attr('dy', 20)
         .text('ground');
 
-    var points = levels.append('g')
+    var levelPoints = levels.append('g')
         .attr('transform', 'translate(60,0)')
         .selectAll('g')
-        .data(new Array(39));
-    var tick = points.enter().append('g')
+        .data(new Array(0));
+        // .data(new Array(39)); TODO
+    var levelTick = levelPoints.enter().append('g')
         .attr('transform', function(d, i) { return 'translate(' + (i*10) + ',30)'; })
         .attr('class', 'levels_item')
         .each(function(d, i) {
@@ -463,32 +459,26 @@ d3.csv('data/frames.csv', function(err, frames) {
         })
         .on('click', function(d, i) {
             dataLoader.setLevel(i).load();
-            clearInterval(interval);
         });
-    tick.append('rect')
+    levelTick.append('rect')
         .attr('class', 'is-area')
         .attr('x', -5)
         .attr('y', -10)
         .attr('width', 10)
         .attr('height', 30);
-    tick.append('circle')
+    levelTick.append('circle')
         .attr('cx', 0)
         .attr('cy', 0)
         .attr('r', 5);
-    tick.append('text')
+    levelTick.append('text')
         .attr('dy', 20)
         .text(function(d, i) { return i; });
 
 
     var hoursSinceLastUpdate = Math.round((Date.now() / 1000 - frames[0].time) / 3600);
-    dataLoader.setFrame(clamp(hoursSinceLastUpdate, 0, frames.length - 1));
+    dataLoader.setFrame(hoursSinceLastUpdate);
 
     dataLoader.load().then(function() {
-
-        // var frame = 0;
-        // interval = setInterval(function() {
-        //     dataLoader.setFrame(++frame % 72).load();
-        // }, 1000);
 
         elContainer.classList.add('is-active');
 
@@ -496,7 +486,6 @@ d3.csv('data/frames.csv', function(err, frames) {
 
 });
 
-var originalWidth, originalHeight;
 
 
 function loadMap() {
@@ -590,8 +579,6 @@ function loadMap() {
     return deferred.promise;
 
 }
-
-
 loadMap();
 
 
@@ -614,20 +601,9 @@ Q(function() {
      * 2. Setup canvases
      */
 
-    // Temperature canvas
-    tempCanvas = document.createElement('canvas');
-    tempCtx = tempCanvas.getContext('2d');
-    elContainer.appendChild(tempCanvas);
-
     // Buffer canvas
     buffer = document.createElement('canvas');
     bufferCtx = buffer.getContext('2d');
-
-    // Heatmap canvas
-    heatCanvas = document.createElement('canvas');
-    heatCtx = buffer.getContext('2d');
-    elContainer.appendChild(tempCanvas);
-    heatCanvas.classList.add('heat');
 
     // Create canvas layers
     canvas = document.createElement('canvas');
@@ -653,8 +629,8 @@ Q(function() {
             elContainer.style.height = (elMain.clientWidth / containerAspectRatio) + 'px';
         }
 
-        canvas.width  = buffer.width  = tempCanvas.width  = heatCanvas.width  = elContainer.clientWidth;
-        canvas.height = buffer.height = tempCanvas.height = heatCanvas.height = elContainer.clientHeight;
+        canvas.width  = buffer.width  = elContainer.clientWidth;
+        canvas.height = buffer.height = elContainer.clientHeight;
 
         svg.attr('width', elContainer.clientWidth);
         svg.attr('height', elContainer.clientHeight);
@@ -669,18 +645,18 @@ Q(function() {
     window.addEventListener('resize', resizeContainer);
 
 
-
     // Start rendering
     render();
 
-    // Mouse event
-    var container = document.querySelector('.container'),
-        header = document.querySelector('.header'),
-        elDetails = document.querySelector('.details');
 
+}).then(function() {
 
-    // Cache elements
-    var elWindIndicatorParent = document.querySelector('.details_item.is-wind'),
+    /**
+     * Cache elements
+     */
+
+    var elDetails = document.querySelector('.details'),
+        elWindIndicatorParent = document.querySelector('.details_item.is-wind'),
         elWindSpeedIndicator = document.querySelector('.data_wind10m_speed'),
         elWindDirectionIndicator = document.querySelector('.data_wind10m_dir'),
         elLatitudeIndicator = document.querySelector('.data_lat'),
@@ -689,7 +665,12 @@ Q(function() {
         elTemperatureIndicator = document.querySelector('.data_temp2m');
 
 
-    container.addEventListener('mousemove', function(e) {
+
+    /**
+     * Show weather details where the cursor is
+     */
+
+    elContainer.addEventListener('mousemove', function(e) {
 
         if (!dataLoader.data) {
             return;
@@ -705,10 +686,6 @@ Q(function() {
             Math.floor((e.pageY - offset.top) / canvas.height * dataLoader.HEIGHT),
         ];
 
-
-        var scale = d3.scale.linear()
-                        .domain([-14, 28])
-                        .range([244,360]);
         var temp = Math.round(dataLoader.get('temp', coords[0], coords[1])*10)/10;
 
         elTemperatureIndicatorParent.style.color = 'rgb(' + tempToColor(temp) + ')';
@@ -722,8 +699,6 @@ Q(function() {
             speed = Math.round(Math.sqrt(u*u+v*v)*36)/10,
             dir = Math.round(360 - Math.atan2(v,u) / Math.PI * 180 - 90);
 
-        var windScale = d3.scale.linear().domain([0,100]).range([0,55]);
-
         // elWindIndicatorParent.style.color = 'hsl(' + Math.floor(154 - speed*2) + ',55%,51%)';
         // elWindIndicatorParent.style.color = 'hsl(' + Math.floor(154 - speed*2) + ',55%,51%)';
         elWindSpeedIndicator.innerHTML = (speed == Math.floor(speed)) ? speed + '.0' : speed;
@@ -733,13 +708,18 @@ Q(function() {
 
     });
 
-    container.addEventListener('mouseover', function(e) {
+    elContainer.addEventListener('mouseover', function(e) {
         elDetails.classList.add('is-active');
     });
-    container.addEventListener('mouseout', function(e) {
+    elContainer.addEventListener('mouseout', function(e) {
         elDetails.classList.remove('is-active');
     });
 
+
+
+    /**
+     * Switch between frames using keyboard
+     */
 
     document.addEventListener('keyup', function(e) {
         var increment = e.shiftKey ? 4 : 1;
@@ -759,6 +739,5 @@ Q(function() {
         }
         dataLoader.load();
     });
-
 
 }).done();
