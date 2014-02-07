@@ -13,8 +13,6 @@ http://sightwind.com
 
 Run `./update.sh`, ideally at 3 times a day.
 
-You can setup a cron task to run update.sh every 30 minutes.
-
 ## License
 
 MIT.
