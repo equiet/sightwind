@@ -1,7 +1,7 @@
 var express = require('express'),
     path = require('path'),
     app = express(),
-    port = 5001;
+    port = process.env.PORT || 5001;
 
 app.get('/', function(req, res) {
     res.sendFile(path.join(__dirname, 'public/index.html'));
