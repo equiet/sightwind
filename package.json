@@ -1,0 +1,23 @@
+{
+  "name": "Sightwind",
+  "version": "0.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/equiet/sightwind.git"
+  },
+  "author": "Jakub Jurovych (equiet)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/equiet/sightwind/issues"
+  },
+  "homepage": "https://github.com/equiet/sightwind",
+  "dependencies": {
+    "express": "^4.10.4"
+  }
+}
