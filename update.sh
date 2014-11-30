@@ -30,7 +30,7 @@ echo "time,frame" > public/data/frames.csv
 
 for FRAME in {0..72}
 do
-    echo "Generating frame $((FRAME))"
+    echo "\n Generating frame $((FRAME))"
 
 	TIME_FRAME=$(( TIME_RUN + FRAME*3600 ))
 
