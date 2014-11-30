@@ -9,10 +9,14 @@ Data by [The Open Meteo Foundation](http://openmeteofoundation.org/).
 
 http://sightwind.com
 
+## Run
+
+`npm start`
+
 ## Update data
 
-Run `./update.sh`, ideally at 3 times a day.
+Run `./update.sh`, ideally 3 times a day.
 
 ## License
 
-MIT.
+MIT
