@@ -28,9 +28,9 @@ mkdir -p public/data
 
 echo "time,frame" > public/data/frames.csv
 
-# for FRAME in {0..72}
 for FRAME in {0..72}
 do
+    echo "Generating frame $((FRAME))"
 
 	TIME_FRAME=$(( TIME_RUN + FRAME*3600 ))
 

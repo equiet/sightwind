@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-
-import netCDF4 as nc
+import netCDF4
 import png
 import struct
 import sys
 import os
-import inspect
 from numpy import *
 
 width=495
@@ -15,7 +12,7 @@ nvals=width*height
 
 frame = sys.argv[1]
 
-data = nc.Dataset('data_tmp.nc', 'r')
+data = netCDF4.Dataset('data_tmp.nc', 'r')
 
 
 
