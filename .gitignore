@@ -1,6 +1,6 @@
-public/data/*
 data.nc
 data_tmp.nc
 *.kate-swp
 sandbox/*
 node_modules/
+.DS_Store
